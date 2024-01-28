@@ -2,7 +2,9 @@ package frc.robot;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.AudioConfigs;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
@@ -29,11 +31,20 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
 
+    private Orchestra orch = new Orchestra();
+
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency, SwerveModuleConstants... modules) {
         super(driveTrainConstants, OdometryUpdateFrequency, modules);
         configurePathPlanner();
+        for (var module : Modules) {
+            module.getDriveMotor().getConfigurator().apply(new AudioConfigs().withAllowMusicDurDisable(true));
+            module.getSteerMotor().getConfigurator().apply(new AudioConfigs().withAllowMusicDurDisable(true));
+
+            orch.addInstrument(module.getDriveMotor());
+            orch.addInstrument(module.getSteerMotor());
+        }
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -64,12 +75,29 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             ()->false, // Change this if the path needs to be flipped on red vs blue
             this); // Subsystem for requirements
     }
+    
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
         return run(() -> this.setControl(requestSupplier.get()));
     }
 
     public Command getAutoPath(String pathName) {
         return new PathPlannerAuto(pathName);
+    }
+
+    public void loadMusic(String sound) {
+        orch.loadMusic(sound);
+    }
+
+    public void playMusic() {
+        orch.play();
+    }
+
+    public void pauseMusic() {
+        orch.pause();
+    }
+
+    public void resetMusic() {
+        orch.stop();
     }
 
     public ChassisSpeeds getCurrentRobotChassisSpeeds() {
@@ -90,4 +118,6 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         });
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
+
+
 }
