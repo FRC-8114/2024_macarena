@@ -46,9 +46,6 @@ public class RobotContainer {
 
   private void configureBindings() {
     button_0_0.onTrue(drivetrain.applyRequest(() -> brake));
-    button_7_5.onTrue(drivetrain.runOnce(() -> drivetrain.playMusic()));
-    button_7_6.onTrue(drivetrain.runOnce(() -> drivetrain.pauseMusic()));
-    button_7_7.onTrue(drivetrain.runOnce(() -> drivetrain.resetMusic()));
 
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
         drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with
@@ -76,6 +73,10 @@ public class RobotContainer {
 
   public Pose2d curPose() {
     return drivetrain.getState().Pose;
+  }
+
+  public void play() {
+    drivetrain.playPauseSong();
   }
 
   public Command moveToPose(Pose2d targetPose) {

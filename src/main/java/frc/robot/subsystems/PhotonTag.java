@@ -7,8 +7,14 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj.TimedRobot;
+
+import java.util.Optional;
+
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonUtils;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 // import java.util.List;
@@ -18,11 +24,14 @@ public class PhotonTag implements Subsystem{
     PhotonCamera camera;
     AprilTagFieldLayout aprilTagFieldLayout;
     Transform3d camToRobot = new Transform3d();
+    PhotonPoseEstimator poseEstimaor;
 
     public PhotonTag(String CamName, AprilTagFieldLayout field, Transform3d xyCamRelationToRobot) {
         camera = new PhotonCamera(CamName);
         aprilTagFieldLayout = field;
         camToRobot = xyCamRelationToRobot;
+        poseEstimaor = new PhotonPoseEstimator(field, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, camera, xyCamRelationToRobot);
+        poseEstimaor.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
     }
 
     public PhotonPipelineResult tagCheck() {
@@ -58,19 +67,24 @@ public class PhotonTag implements Subsystem{
 
     }
 
-    public Pose2d getRoboPose(PhotonTrackedTarget target) {
+    // public Pose2d getRoboPose(PhotonTrackedTarget target) {
         
-        Pose3d goalAprilTag = aprilTagFieldLayout.getTagPose(
-            target.getFiducialId() // The id of the AprilTag in view
-        ).get(); // unwrap Option<>
+    //     Pose3d goalAprilTag = aprilTagFieldLayout.getTagPose(
+    //         target.getFiducialId() // The id of the AprilTag in view
+    //     ).get(); // unwrap Option<>
       
-        Pose3d roboPose = PhotonUtils.estimateFieldToRobotAprilTag(
-            target.getBestCameraToTarget(),
-            goalAprilTag,
-            camToRobot
-        );
+    //     Pose3d roboPose = PhotonUtils.estimateFieldToRobotAprilTag(
+    //         target.getBestCameraToTarget(),
+    //         goalAprilTag,
+    //         camToRobot
+    //     );
 
-        return roboPose.toPose2d();
+    //     return roboPose.toPose2d();
+    // }
+
+    public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
+        poseEstimaor.setReferencePose(prevEstimatedRobotPose);
+        return poseEstimaor.update();
     }
 
     public double roboDistance(Pose2d roboPose, PhotonTrackedTarget target) {

@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.SwerveOrchestraRequest;
 
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem
@@ -31,7 +32,9 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
 
-    private Orchestra orch = new Orchestra();
+    private SwerveOrchestraRequest orch = new SwerveOrchestraRequest();
+    private boolean isPlayingMusic = false;
+    
 
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
 
@@ -41,19 +44,25 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         for (var module : Modules) {
             module.getDriveMotor().getConfigurator().apply(new AudioConfigs().withAllowMusicDurDisable(true));
             module.getSteerMotor().getConfigurator().apply(new AudioConfigs().withAllowMusicDurDisable(true));
-
-            orch.addInstrument(module.getDriveMotor());
-            orch.addInstrument(module.getSteerMotor());
         }
         if (Utils.isSimulation()) {
             startSimThread();
         }
+
+        orch.apply(m_requestParameters, Modules);
     }
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
         super(driveTrainConstants, modules);
+        configurePathPlanner();
+        for (var module : Modules) {
+            module.getDriveMotor().getConfigurator().apply(new AudioConfigs().withAllowMusicDurDisable(true));
+            module.getSteerMotor().getConfigurator().apply(new AudioConfigs().withAllowMusicDurDisable(true));
+        }
         if (Utils.isSimulation()) {
             startSimThread();
         }
+
+        orch.apply(m_requestParameters, Modules);
     }
 
     private void configurePathPlanner() {
@@ -84,10 +93,6 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         return new PathPlannerAuto(pathName);
     }
 
-    public void loadMusic(String sound) {
-        orch.loadMusic(sound);
-    }
-
     public void playMusic() {
         orch.play();
     }
@@ -98,6 +103,16 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
     public void resetMusic() {
         orch.stop();
+    }
+
+    public Command playPauseSong() {
+        return runOnce(() -> {
+            isPlayingMusic = !isPlayingMusic;
+
+            this.setControl(orch.withMusic());
+
+            orch.play();
+        });
     }
 
     public ChassisSpeeds getCurrentRobotChassisSpeeds() {

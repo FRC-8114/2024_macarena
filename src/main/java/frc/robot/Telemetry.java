@@ -10,6 +10,7 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -83,6 +84,7 @@ public class Telemetry {
             pose.getY(),
             pose.getRotation().getDegrees()
         });
+
 
         /* Telemeterize the robot's general speeds */
         double currentTime = Utils.getCurrentTimeSeconds();
