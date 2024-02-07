@@ -5,6 +5,7 @@
 package frc.robot;
 
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -12,6 +13,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -27,7 +29,8 @@ public class Robot extends TimedRobot {
 
   private RobotContainer m_robotContainer;
 
-  PhotonTag april = new PhotonTag("arducam1", AprilTagFields.k2024Crescendo.loadAprilTagLayoutField(), new Transform3d(0.356, 0, 0.178, new Rotation3d(0,0,180)));
+  PhotonTag april = new PhotonTag("arducam1", AprilTagFields.k2024Crescendo.loadAprilTagLayoutField(),
+      new Transform3d(new Translation3d(-0.3429, 0, 0.216), new Rotation3d(0, -0.436, 3.1415)));
   boolean usingTags = true;
 
   @Override
@@ -39,16 +42,19 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
-    CommandScheduler.getInstance().run(); 
+    CommandScheduler.getInstance().run();
     if (usingTags) {
-        if (april.getEstimatedGlobalPose(m_robotContainer.drivetrain.getState().Pose).isPresent()) {
-          Pose2d curPos = april.getEstimatedGlobalPose(m_robotContainer.drivetrain.getState().Pose).get().estimatedPose.toPose2d();
-          System.out.println("tag seen");
-          m_robotContainer.drivetrain.addVisionMeasurement(curPos, Timer.getFPGATimestamp());
+      var pipeLine = april.getEstimatedGlobalPose();
+      if (pipeLine.isPresent()) {
+        if ((pipeLine.get().strategy == PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR)
+            || (pipeLine.get().strategy != PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR
+                && pipeLine.get().targetsUsed.get(0).getPoseAmbiguity() > 0.2)) {
+          Pose2d curPos = pipeLine.get().estimatedPose.toPose2d();
+          m_robotContainer.drivetrain.addVisionMeasurement(curPos, pipeLine.get().timestampSeconds);
         }
+      }
     }
     field.setRobotPose(m_robotContainer.drivetrain.getState().Pose);
-    Shuffleboard.update();
   }
 
   @Override
@@ -56,10 +62,12 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+  }
 
   @Override
-  public void disabledExit() {}
+  public void disabledExit() {
+  }
 
   @Override
   public void autonomousInit() {
@@ -71,17 +79,19 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousPeriodic() {
+  }
 
   @Override
-  public void autonomousExit() {}
+  public void autonomousExit() {
+  }
 
   @Override
   public void teleopInit() {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-    m_robotContainer.drivetrain.seedFieldRelative(new Pose2d(14.72234058380127, 7.769551753997803, new Rotation2d(1.5707963267948966)));
+    //m_robotContainer.drivetrain.seedFieldRelative(new Pose2d(14.72234058380127, 7.769551753997803, new Rotation2d(1.5707963267948966)));
   }
 
   @Override
@@ -89,7 +99,8 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void teleopExit() {}
+  public void teleopExit() {
+  }
 
   @Override
   public void testInit() {
@@ -97,11 +108,14 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void testPeriodic() {}
+  public void testPeriodic() {
+  }
 
   @Override
-  public void testExit() {}
+  public void testExit() {
+  }
 
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+  }
 }

@@ -67,23 +67,22 @@ public class PhotonTag implements Subsystem{
 
     }
 
-    // public Pose2d getRoboPose(PhotonTrackedTarget target) {
+    public Pose2d getRoboPose(PhotonTrackedTarget target) {
         
-    //     Pose3d goalAprilTag = aprilTagFieldLayout.getTagPose(
-    //         target.getFiducialId() // The id of the AprilTag in view
-    //     ).get(); // unwrap Option<>
+        Pose3d goalAprilTag = aprilTagFieldLayout.getTagPose(
+            target.getFiducialId() // The id of the AprilTag in view
+        ).get(); // unwrap Option<>
       
-    //     Pose3d roboPose = PhotonUtils.estimateFieldToRobotAprilTag(
-    //         target.getBestCameraToTarget(),
-    //         goalAprilTag,
-    //         camToRobot
-    //     );
+        Pose3d roboPose = PhotonUtils.estimateFieldToRobotAprilTag(
+            target.getBestCameraToTarget(),
+            goalAprilTag,
+            camToRobot
+        );
 
-    //     return roboPose.toPose2d();
-    // }
+        return roboPose.toPose2d();
+    }
 
-    public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
-        poseEstimaor.setReferencePose(prevEstimatedRobotPose);
+    public Optional<EstimatedRobotPose> getEstimatedGlobalPose() {
         return poseEstimaor.update();
     }
 

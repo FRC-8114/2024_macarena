@@ -23,7 +23,7 @@ import frc.robot.ControlSys.launchtrigger;
 import frc.robot.generated.TunerConstants;
 
 public class RobotContainer {
-  private double MaxSpeed = 6; // 6 meters per second desired top speed
+  private double MaxSpeed = 4.572; // 6 meters per second desired top speed
   private double MaxAngularRate = 1.5 * Math.PI; // 3/4 of a rotation per second max angular velocity
 
   /* Setting up bindings for necessary control of the swerve drive platform */
@@ -57,6 +57,8 @@ public class RobotContainer {
     joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
     joystick.b().whileTrue(drivetrain
         .applyRequest(() -> point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
+
+    joystick.povDown().onTrue(moveToPose(new Pose2d(15.201, 5.574, new Rotation2d(0))));
 
     // reset the field-centric heading on left bumper press
     joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));

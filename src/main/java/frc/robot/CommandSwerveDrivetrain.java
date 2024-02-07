@@ -41,32 +41,20 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency, SwerveModuleConstants... modules) {
         super(driveTrainConstants, OdometryUpdateFrequency, modules);
         configurePathPlanner();
-        for (var module : Modules) {
-            module.getDriveMotor().getConfigurator().apply(new AudioConfigs().withAllowMusicDurDisable(true));
-            module.getSteerMotor().getConfigurator().apply(new AudioConfigs().withAllowMusicDurDisable(true));
-        }
         if (Utils.isSimulation()) {
             startSimThread();
         }
-
-        orch.apply(m_requestParameters, Modules);
     }
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
         super(driveTrainConstants, modules);
         configurePathPlanner();
-        for (var module : Modules) {
-            module.getDriveMotor().getConfigurator().apply(new AudioConfigs().withAllowMusicDurDisable(true));
-            module.getSteerMotor().getConfigurator().apply(new AudioConfigs().withAllowMusicDurDisable(true));
-        }
         if (Utils.isSimulation()) {
             startSimThread();
         }
-
-        orch.apply(m_requestParameters, Modules);
     }
 
     private void configurePathPlanner() {
-        double driveBaseRadius = 0;
+        double driveBaseRadius = 0.267;
         for (var moduleLocation : m_moduleLocations) {
             driveBaseRadius = Math.max(driveBaseRadius, moduleLocation.getNorm());
         }
@@ -76,8 +64,8 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             this::seedFieldRelative,  // Consumer for seeding pose against auto
             this::getCurrentRobotChassisSpeeds,
             (speeds)->this.setControl(autoRequest.withSpeeds(speeds)), // Consumer of ChassisSpeeds to drive the robot
-            new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 0),
-                                            new PIDConstants(10, 0, 0),
+            new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 3),
+                                            new PIDConstants(10, 0, 2),
                                             TunerConstants.kSpeedAt12VoltsMps,
                                             driveBaseRadius,
                                             new ReplanningConfig()),
