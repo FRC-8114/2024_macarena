@@ -15,6 +15,8 @@ import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -54,7 +56,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     }
 
     private void configurePathPlanner() {
-        double driveBaseRadius = 0.267;
+        double driveBaseRadius = 0.381;
         for (var moduleLocation : m_moduleLocations) {
             driveBaseRadius = Math.max(driveBaseRadius, moduleLocation.getNorm());
         }
@@ -64,13 +66,27 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             this::seedFieldRelative,  // Consumer for seeding pose against auto
             this::getCurrentRobotChassisSpeeds,
             (speeds)->this.setControl(autoRequest.withSpeeds(speeds)), // Consumer of ChassisSpeeds to drive the robot
-            new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 3),
-                                            new PIDConstants(10, 0, 2),
+            new HolonomicPathFollowerConfig(new PIDConstants(90, 0, .2),
+                                            new PIDConstants(3, 0, .1),
                                             TunerConstants.kSpeedAt12VoltsMps,
                                             driveBaseRadius,
                                             new ReplanningConfig()),
             ()->false, // Change this if the path needs to be flipped on red vs blue
             this); // Subsystem for requirements
+    }
+
+    @Override
+    public void seedFieldRelative(Pose2d location) {
+        try {
+            m_stateLock.writeLock().lock();
+
+            System.out.println("troll");
+            m_odometry.resetPosition(Rotation2d.fromDegrees(m_yawGetter.getValue()), m_modulePositions, location);
+            /* We need to update our cached pose immediately so that race conditions don't happen */
+            m_cachedState.Pose = location;
+        } finally {
+            m_stateLock.writeLock().unlock();
+        }
     }
     
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
