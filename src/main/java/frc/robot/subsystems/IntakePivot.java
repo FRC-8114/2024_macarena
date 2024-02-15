@@ -5,10 +5,14 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkPIDController;
+
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Subsystem;
+
 import com.revrobotics.CANSparkBase.IdleMode;
 
-public class IntakePivot {
-    private static int intakePivotID = 0;
+public class IntakePivot implements Subsystem {
+    private static int intakePivotID = 52;
     static CANSparkMax intakePivot;
     private SparkPIDController intakePivotPID;
     public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput;
@@ -40,7 +44,11 @@ public class IntakePivot {
         intakePivotPID.setOutputRange(kMinOutput, kMaxOutput);
     }
 
-    public double GetAngle() {
+    public double getAngle() {
         return intakePivot.getEncoder().getPosition();
+    }
+
+    public Command setAngle(double angle) {
+        return run(() -> intakePivotPID.setReference(angle, CANSparkMax.ControlType.kPosition));
     }
 }

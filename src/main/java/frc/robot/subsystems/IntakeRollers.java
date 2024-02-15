@@ -4,21 +4,24 @@ import com.revrobotics.CANSparkBase.IdleMode;
 // import edu.wpi.first.wpilibj.drive.RobotDriveBase.MotorType;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Subsystem;
+
 import com.revrobotics.CANSparkMax;
 
-public class IntakeRollers {
-    private static int intakeRollersID = 0;
+public class IntakeRollers implements Subsystem {
+    private static int intakeRollersID = 51;
     final static CANSparkMax intakeRollers = new CANSparkMax(intakeRollersID, MotorType.kBrushless);
 
-    public void IntakeInit() {
+    public IntakeRollers() {
         intakeRollers.setIdleMode(IdleMode.kBrake);
     }
 
-    public void IntakeNote(double voltage) {
-        intakeRollers.setVoltage(voltage);
+    public Command IntakeNote(double voltage) {
+        return run(() -> intakeRollers.setVoltage(voltage));
     }
 
-    public void IntakeReverse(double voltage) {
-        intakeRollers.setVoltage(-voltage);
+    public Command IntakeReverse(double voltage) {
+        return run(() -> intakeRollers.setVoltage(-voltage));
     }
 }
