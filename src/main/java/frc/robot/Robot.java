@@ -4,21 +4,16 @@
 
 package frc.robot;
 
-import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.PhotonTag;
@@ -29,8 +24,11 @@ public class Robot extends TimedRobot {
 
   private RobotContainer m_robotContainer;
 
-  PhotonTag april = new PhotonTag("arducam1", AprilTagFields.k2024Crescendo.loadAprilTagLayoutField(),
-      new Transform3d(new Translation3d(-0.3429, 0, 0.216), new Rotation3d(0, -0.436, 3.1415)));
+  PhotonTag april = new PhotonTag(
+    "arducam1",
+    AprilTagFields.k2024Crescendo.loadAprilTagLayoutField(),
+    new Transform3d(new Translation3d(-0.3429, 0, 0.216),
+    new Rotation3d(0, -0.436, 3.1415)));
   boolean usingTags = true;
 
   @Override

@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import java.io.ObjectInputFilter.Status;
-
 import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;

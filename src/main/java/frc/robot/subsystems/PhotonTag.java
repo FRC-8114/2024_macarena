@@ -1,12 +1,10 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj2.command.*;
-import edu.wpi.first.wpilibj.TimedRobot;
 
 import java.util.Optional;
 
@@ -17,7 +15,6 @@ import org.photonvision.PhotonUtils;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
-// import java.util.List;
 
 public class PhotonTag implements Subsystem{
     
@@ -39,32 +36,6 @@ public class PhotonTag implements Subsystem{
         var result = camera.getLatestResult();
 
         return result;
-    //     if (result.hasTargets()) {
-    //     // lis😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊t of all AprilTags in view
-    //     // List<PhotonTrackedTarget> list_targets = result.getTargets();
-
-    //       PhotonTrackedTarget target = result.getBestTarget(); // Select the best AprilTag in view
-      
-    //       Pose3d goalAprilTag = aprilTagFieldLayout.getTagPose(
-    //         target.getFiducialId() // The id of the AprilTag in view
-    //     ).get(); // unwrap Option<>
-      
-    //     Pose3d robotPose = PhotonUtils.estimateFieldToRobotAprilTag(
-    //         target.getBestCameraToTarget(),
-    //         goalAprilTag,
-    //         camToRobot
-    //     );
-
-    //     // double distanceToTarget = PhotonUtils.getDistanceToPose( // Takes pose2d, not pose3d
-    //     //     robotPose.toPose2d(),
-    //     //     goalAprilTag.toPose2d()
-    //     // );
-
-    //     // distanceToTarget
-
-
-    //  }
-
     }
 
     public Pose2d getRoboPose(PhotonTrackedTarget target) {
