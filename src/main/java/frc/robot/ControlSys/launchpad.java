@@ -3,7 +3,6 @@ package frc.robot.ControlSys;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class launchpad implements Subsystem {
 

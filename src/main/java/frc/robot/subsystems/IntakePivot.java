@@ -2,8 +2,12 @@ package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkPIDController;
@@ -12,34 +16,28 @@ import com.revrobotics.CANSparkBase.IdleMode;
 
 import static frc.robot.Constants.IntakeConstants.*;
 
-public class IntakePivot extends SubsystemBase {
-    private final CANSparkMax intakePivot;
-    private final SparkPIDController intakePivotPID;
+public class IntakePivot implements Subsystem {
+    private final CANSparkMax intakePivot = new CANSparkMax(intakePivotID, MotorType.kBrushless);
+    private final Encoder intakePivotEncoder = new Encoder(0, 1);
+
+    private final TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(6, 1);
+    private final ProfiledPIDController controller = new ProfiledPIDController(kP, kI, kD, constraints, kDt);
+    private final ArmFeedforward feedforward = new ArmFeedforward(kS, kG, kV);
 
     // __init__()
     public IntakePivot() {
-        intakePivot = new CANSparkMax(intakePivotID, MotorType.kBrushless);
 
         // set idle to brake and zero the motor
 
-        intakePivot.setIdleMode(IdleMode.kBrake);
-        intakePivot.getEncoder().setPosition(0);
-
-        intakePivotPID = intakePivot.getPIDController();
-
-        intakePivotPID.setP(kP);
-        intakePivotPID.setI(kI);
-        intakePivotPID.setD(kD);
-        intakePivotPID.setIZone(kIz);
-        intakePivotPID.setFF(kFF);
-        intakePivotPID.setOutputRange(kMaxOutput, kMinOutput);
+        intakePivot.setIdleMode(IdleMode.kBrake); 
     }
 
     public double getAngle() {
         return intakePivot.getEncoder().getPosition();
     }
 
-    public Command setAngleCommand(double angle) {
-        return run(() -> intakePivotPID.setReference(angle, ControlType.kPosition));
+    public Command setAngleCommand(double goal) {
+        controller.setGoal(goal);
+        return run(() -> intakePivot.setVoltage(controller.calculate(intakePivotEncoder.getDistance()) + feedforward.calculate(intakePivotEncoder.getDistance(), controller.getSetpoint().velocity)));
     }
 }

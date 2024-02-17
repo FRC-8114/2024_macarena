@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.util.function.DoubleSupplier;
+
 public class Constants {
     // Shooter Constants
     public static final class ShooterConstants {
@@ -19,12 +21,14 @@ public class Constants {
         public static final int intakeRollersID = 51;
 
         // intake PID coefficients
-        public static final double kP = 0.1;
-        public static final double kI = 1e-4;
-        public static final double kD = 1;
-        public static final double kIz = 0;
-        public static final double kFF = 0;
-        public static final double kMaxOutput = 1;
-        public static final double kMinOutput = -1;
+        public static double kDt = 0.02;
+        public static double kMaxVelocity = 1.75;
+        public static double kMaxAcceleration = 0.75;
+        public static double kP = 1.3;
+        public static double kI = 0.0;
+        public static double kD = 0.7;
+        public static double kS = 1.1;
+        public static double kG = 1.2;
+        public static double kV = 1.3;
     };
 }
