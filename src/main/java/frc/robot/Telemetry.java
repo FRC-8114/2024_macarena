@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.util.Optional;
+
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain.SwerveDriveState;
 
@@ -10,6 +12,8 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
@@ -90,23 +94,36 @@ public class Telemetry {
         double currentTime = Utils.getCurrentTimeSeconds();
         double diffTime = currentTime - lastTime;
         lastTime = currentTime;
-        Translation2d distanceDiff = pose.minus(m_lastPose).getTranslation();
+        Translation2d distanceDiff = new Translation2d();
+        Optional<Alliance> ally = DriverStation.getAlliance();
+        if (ally.isPresent()) {
+            if (ally.get() == Alliance.Blue) {
+                distanceDiff = pose.minus(m_lastPose).getTranslation();
+            }
+            if (ally.get() == Alliance.Red) {
+                distanceDiff = pose.minus(m_lastPose).getTranslation();
+            }
+        }
+        else {
+            distanceDiff = pose.minus(m_lastPose).getTranslation();
+        }
+        
         m_lastPose = pose;
 
-        Translation2d velocities = distanceDiff.div(diffTime);
+        // Translation2d velocities = distanceDiff.div(diffTime);
 
-        speed.set(velocities.getNorm());
-        velocityX.set(velocities.getX());
-        velocityY.set(velocities.getY());
-        odomPeriod.set(state.OdometryPeriod);
+        // speed.set(velocities.getNorm());
+        // velocityX.set(velocities.getX());
+        // velocityY.set(velocities.getY());
+        // odomPeriod.set(state.OdometryPeriod);
 
         /* Telemeterize the module's states */
-        for (int i = 0; i < 4; ++i) {
-            m_moduleSpeeds[i].setAngle(state.ModuleStates[i].angle);
-            m_moduleDirections[i].setAngle(state.ModuleStates[i].angle);
-            m_moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * MaxSpeed));
+        // for (int i = 0; i < 4; ++i) {
+        //     m_moduleSpeeds[i].setAngle(state.ModuleStates[i].angle);
+        //     m_moduleDirections[i].setAngle(state.ModuleStates[i].angle);
+        //     m_moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * MaxSpeed));
 
-            SmartDashboard.putData("Module " + i, m_moduleMechanisms[i]);
-        }
+        //     SmartDashboard.putData("Module " + i, m_moduleMechanisms[i]);
+        // w}
     }
 }

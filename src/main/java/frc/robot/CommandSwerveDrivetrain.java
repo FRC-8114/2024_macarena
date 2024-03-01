@@ -21,7 +21,6 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.SwerveOrchestraRequest;
 
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem
@@ -32,8 +31,6 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
 
-    private SwerveOrchestraRequest orch = new SwerveOrchestraRequest();
-    private boolean isPlayingMusic = false;
     
 
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
@@ -64,7 +61,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             this::seedFieldRelative,  // Consumer for seeding pose against auto
             this::getCurrentRobotChassisSpeeds,
             (speeds)->this.setControl(autoRequest.withSpeeds(speeds)), // Consumer of ChassisSpeeds to drive the robot
-            new HolonomicPathFollowerConfig(new PIDConstants(90, 0, .2),
+            new HolonomicPathFollowerConfig(new PIDConstants(2, 0, .2),
                                             new PIDConstants(3, 0, .1),
                                             TunerConstants.kSpeedAt12VoltsMps,
                                             driveBaseRadius,
@@ -93,28 +90,6 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
     public Command getAutoPath(String pathName) {
         return new PathPlannerAuto(pathName);
-    }
-
-    public void playMusic() {
-        orch.play();
-    }
-
-    public void pauseMusic() {
-        orch.pause();
-    }
-
-    public void resetMusic() {
-        orch.stop();
-    }
-
-    public Command playPauseSong() {
-        return runOnce(() -> {
-            isPlayingMusic = !isPlayingMusic;
-
-            this.setControl(orch.withMusic());
-
-            orch.play();
-        });
     }
 
     public ChassisSpeeds getCurrentRobotChassisSpeeds() {

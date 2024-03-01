@@ -16,19 +16,19 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-public class PhotonTag implements Subsystem{
+public class PhotonTag implements Subsystem {
     
     PhotonCamera camera;
     AprilTagFieldLayout aprilTagFieldLayout;
     Transform3d camToRobot = new Transform3d();
-    PhotonPoseEstimator poseEstimaor;
+    PhotonPoseEstimator poseEstimator;
 
     public PhotonTag(String CamName, AprilTagFieldLayout field, Transform3d xyCamRelationToRobot) {
         camera = new PhotonCamera(CamName);
         aprilTagFieldLayout = field;
         camToRobot = xyCamRelationToRobot;
-        poseEstimaor = new PhotonPoseEstimator(field, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, camera, xyCamRelationToRobot);
-        poseEstimaor.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+        poseEstimator = new PhotonPoseEstimator(field, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, camera, xyCamRelationToRobot);
+        poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
     }
 
     public PhotonPipelineResult tagCheck() {
@@ -54,7 +54,7 @@ public class PhotonTag implements Subsystem{
     }
 
     public Optional<EstimatedRobotPose> getEstimatedGlobalPose() {
-        return poseEstimaor.update();
+        return poseEstimator.update();
     }
 
     public double roboDistance(Pose2d roboPose, PhotonTrackedTarget target) {

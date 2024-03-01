@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import java.util.Map;
+
+import org.littletonrobotics.urcl.URCL;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -11,7 +14,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -29,7 +34,7 @@ public class Robot extends TimedRobot {
     AprilTagFields.k2024Crescendo.loadAprilTagLayoutField(),
     new Transform3d(new Translation3d(-0.3429, 0, 0.216),
     new Rotation3d(0, -0.436, 3.1415)));
-  boolean usingTags = true;
+  boolean usingTags = false;
 
   @Override
   public void robotInit() {
@@ -41,17 +46,15 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
-    if (usingTags) {
-      var pipeLine = april.getEstimatedGlobalPose();
-      if (pipeLine.isPresent()) {
-        if ((pipeLine.get().strategy == PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR)
-            || (pipeLine.get().strategy != PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR
-                && pipeLine.get().targetsUsed.get(0).getPoseAmbiguity() > 0.2)) {
-          Pose2d curPos = pipeLine.get().estimatedPose.toPose2d();
-          m_robotContainer.drivetrain.addVisionMeasurement(curPos, pipeLine.get().timestampSeconds);
-        }
+    var pipeline = april.getEstimatedGlobalPose();
+    if (usingTags && pipeline.isPresent()) {
+      Pose2d curPos = pipeline.get().estimatedPose.toPose2d();
+      if ((pipeline.get().strategy == PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR)
+          || pipeline.get().targetsUsed.get(0).getPoseAmbiguity() > 0.2) {
+        m_robotContainer.drivetrain.addVisionMeasurement(curPos, pipeline.get().timestampSeconds);
       }
     }
+    
     field.setRobotPose(m_robotContainer.drivetrain.getState().Pose);
   }
 
