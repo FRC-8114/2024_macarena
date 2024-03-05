@@ -7,6 +7,8 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.ShooterRotationConstants.*;
 
+import java.util.Map;
+
 import org.photonvision.PhotonUtils;
 
 import com.revrobotics.CANSparkBase.IdleMode;
@@ -24,12 +26,15 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.MutableMeasure;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -42,17 +47,27 @@ public class ShooterPivot implements Subsystem {
     private final CANSparkMax shooterPivot = new CANSparkMax(shooterPivotID, MotorType.kBrushless);
     private final CANcoder shooterPivotEncoder = new CANcoder(4, "canivore");
 
-    private final TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(5, 6);
+    private final TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(3, 2);
     private final ProfiledPIDController controller = new ProfiledPIDController(kP, kI, kD, constraints, kDt);
     private final ArmFeedforward feedforward = new ArmFeedforward(kS, kG, kV);
-
+    private GenericEntry shootAngle = Shuffleboard.getTab("FieldInfo").add("Shooter Angle", 0.0).withWidget(BuiltInWidgets.kNumberSlider).withProperties(Map.of("min", 0, "max", 65)).getEntry();
     
     public ShooterPivot() {
         shooterPivot.setIdleMode(IdleMode.kBrake);
-        shooterPivotEncoder.getConfigurator().apply(new MagnetSensorConfigs().withSensorDirection(SensorDirectionValue.Clockwise_Positive).withMagnetOffset(0.4287109375));
+        shooterPivotEncoder.getConfigurator().apply(new MagnetSensorConfigs().withSensorDirection(SensorDirectionValue.Clockwise_Positive).withMagnetOffset(-0.406494140625));
 
         // TODO: Generate test data
-        angleMap.put(5.0, 20.0);
+        angleMap.put(Units.inchesToMeters(16), 58.79);
+        angleMap.put(Units.inchesToMeters(16+12), 51.47);
+        angleMap.put(Units.inchesToMeters(16+24), 46.59);
+        angleMap.put(Units.inchesToMeters(16+36), 42.37);
+        angleMap.put(Units.inchesToMeters(16+48), 41.48);
+        angleMap.put(Units.inchesToMeters(16+60), 40.00);
+        angleMap.put(Units.inchesToMeters(16+72), 38.60);
+        angleMap.put(Units.inchesToMeters(16+84), 38.60);
+        angleMap.put(Units.inchesToMeters(16+96), 35.72);
+        angleMap.put(Units.inchesToMeters(16+108), 34.61);
+
     }
 
     public double getAngle() {
@@ -61,8 +76,21 @@ public class ShooterPivot implements Subsystem {
 
     public Command setAngleCommand(double goal) {
         return run(() -> {
-            shooterPivot.setVoltage(-(controller.calculate(shooterPivotEncoder.getPosition().getValueAsDouble(), goal)
-                    + feedforward.calculate(shooterPivotEncoder.getPosition().getValueAsDouble(), controller.getSetpoint().velocity)));
+            // System.out.println(-(controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), goal))
+            //         + " | " + -(feedforward.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), controller.getSetpoint().velocity)) + " | " + shootAngle.getDouble(0.0) + " | " + goal);
+            shooterPivot.setVoltage((controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), goal)
+                    + feedforward.calculate(Units.rotationsToRadians(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble()), controller.getSetpoint().velocity)));
+        });
+    }
+
+    public Command setAngleFromShuffle() {
+        Shuffleboard.update();
+        return run(() -> {
+            // System.out.println((controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), Units.degreesToRotations(shootAngle.getDouble(0.0))))
+            //         + " | " + (feedforward.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), controller.getSetpoint().velocity)) + " | " + Units.degreesToRotations(shootAngle.getDouble(0.0)));
+            // System.out.println("" + Units.degreesToRotations(shootAngle.getDouble(0.0)));
+            shooterPivot.setVoltage((controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), Units.degreesToRotations(shootAngle.getDouble(0.0)))
+                    + feedforward.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), controller.getSetpoint().velocity)));
         });
     }
 
@@ -82,7 +110,6 @@ public class ShooterPivot implements Subsystem {
         return run(() -> System.out.println(Units.rotationsToDegrees(shooterPivotEncoder.getPosition().getValueAsDouble()) + " | " + shooterPivotEncoder.getPosition().getValueAsDouble())).ignoringDisable(true);
         // return run(() -> SmartDashboard.putNumber("Shooter Pivot Position", shooterPivotEncoder.getPosition().getValueAsDouble()));
     }
-
 
     // SysID
     private final MutableMeasure<Voltage> appliedVoltage = mutable(Volts.of(0));

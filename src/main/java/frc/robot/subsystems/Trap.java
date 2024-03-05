@@ -16,7 +16,7 @@ public class Trap implements Subsystem {
         trap.setIdleMode(IdleMode.kBrake);
     }
 
-    public Command setAngleCommand(double voltage) {
+    public Command setVoltageCommand(double voltage) {
         return run(() -> trap.setVoltage(voltage));
     }
 }

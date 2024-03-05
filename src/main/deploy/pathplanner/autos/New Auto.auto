@@ -2,8 +2,8 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 2,
-      "y": 2
+      "x": 1.290597959227301,
+      "y": 5.597779868883561
     },
     "rotation": 0
   },
@@ -14,13 +14,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": null
+            "pathName": "New Path"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": null
+            "name": "intake"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 5.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeBack"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Example Path"
           }
         }
       ]

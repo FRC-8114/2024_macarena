@@ -3,8 +3,9 @@ package frc.robot.ControlSys;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class launchpad implements Subsystem {
+public class launchpad extends SubsystemBase {
 
     public boolean cur[][] = new boolean[9][9];
     public NetworkTableInstance table;
@@ -21,8 +22,8 @@ public class launchpad implements Subsystem {
 
     @Override
     public void periodic() {
-        for (int i = 0; i < 9; i++) {
-            for (int a = 0; a < 9; a++) {
+        for (int i = 0; i < 8; i++) {
+            for (int a = 0; a < 8; a++) {
                 cur[i][a] = launch.getEntry(i+"|"+a).getBoolean(false);
             }
         }
