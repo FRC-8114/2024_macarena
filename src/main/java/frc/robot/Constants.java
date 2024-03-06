@@ -6,12 +6,12 @@ public class Constants {
         public static final int intakeRollersID = 52;
         public static final int limSwitchDIO = 7;
 
-        public static double kP = 5;
+        public static double kP = 13;
         public static double kI = 0.0;
-        public static double kD = 0.4;
+        public static double kD = 0.1;
     
         public static double kS = 1.1;
-        public static double kG = 0.1;
+        public static double kG = 0.2;
         public static double kV = 0.58;
         public static double kDt = 0.02;
     

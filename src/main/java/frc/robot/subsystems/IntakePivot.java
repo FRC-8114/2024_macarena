@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
@@ -27,16 +28,18 @@ import static edu.wpi.first.units.MutableMeasure.mutable;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase.IdleMode;
 
 import static frc.robot.Constants.IntakeConstants.*;
 
-public class IntakePivot implements Subsystem {
+public class IntakePivot extends SubsystemBase {
     private final CANSparkMax intakePivot = new CANSparkMax(intakePivotID, MotorType.kBrushless);
     //private final Encoder intakePivotEncoder = new Encoder(8, 9);
     private final RelativeEncoder intakePivotEncoder = intakePivot.getEncoder();
+    private final SparkPIDController intakePivotController = intakePivot.getPIDController();
 
-    private final TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(4, 4);
+    private final TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(12, 12);
     private final ProfiledPIDController controller = new ProfiledPIDController(kP, kI, kD, constraints, kDt);
     private final ArmFeedforward feedforward = new ArmFeedforward(kS, kG, kV);
 
@@ -47,6 +50,8 @@ public class IntakePivot implements Subsystem {
         // intakePivotEncoder.setSamplesToAverage(5);
         intakePivotEncoder.setPosition(0);
         intakePivotEncoder.setPositionConversionFactor(1.0/30.0);
+        // intakePivotController.setFeedbackDevice(intakePivotEncoder);
+        // intakePivotController.
     }
 
     public double getAngle() {
@@ -61,6 +66,10 @@ public class IntakePivot implements Subsystem {
     }
 
     public Command intakeDown() {
+        return setAngleCommand(0.39365264773368835).until(() -> intakePivotEncoder.getPosition() > 0.3765264773368835).andThen(stopMotor());
+    }
+
+    public Command intakeAmp() {
         return setAngleCommand(0.39365264773368835).until(() -> intakePivotEncoder.getPosition() > 0.3465264773368835).andThen(stopMotor());
     }
 
@@ -79,6 +88,11 @@ public class IntakePivot implements Subsystem {
     public Command printEncoder() {
         return run(() -> System.out.println(intakePivotEncoder.getPosition()));
     }
+
+    // @Override
+    // public void periodic() {
+
+    // }
 
     // // SysID
     // private final MutableMeasure<Voltage> appliedVoltage = mutable(Volts.of(0));

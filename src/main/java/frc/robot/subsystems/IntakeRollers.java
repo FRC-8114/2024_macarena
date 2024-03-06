@@ -61,7 +61,7 @@ public class IntakeRollers extends SubsystemBase {
     public void periodic()
     {
         
-        SmartDashboard.putNumber("Intake CUrrent", intakeRollers.getOutputCurrent());
+        // SmartDashboard.putNumber("Intake CUrrent", intakeRollers.getOutputCurrent());
     }
 
 }

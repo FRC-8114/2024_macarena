@@ -54,7 +54,7 @@ public class ShooterPivot implements Subsystem {
     
     public ShooterPivot() {
         shooterPivot.setIdleMode(IdleMode.kBrake);
-        shooterPivotEncoder.getConfigurator().apply(new MagnetSensorConfigs().withSensorDirection(SensorDirectionValue.Clockwise_Positive).withMagnetOffset(-0.406494140625));
+        shooterPivotEncoder.getConfigurator().apply(new MagnetSensorConfigs().withSensorDirection(SensorDirectionValue.Clockwise_Positive).withMagnetOffset(0.096923828125));
 
         // TODO: Generate test data
         angleMap.put(Units.inchesToMeters(16), 58.79);

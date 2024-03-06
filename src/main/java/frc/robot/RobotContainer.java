@@ -69,11 +69,10 @@ public class RobotContainer {
 
   private launchtrigger[][] button = new launchtrigger[8][8];
 
-  Optional<Alliance> ally = DriverStation.getAlliance();
-
-  private void configureBindings() {
+  public void configureBindings() {
     // TODO: Fix positives / negatives
     // Drive Controls (Flip depending on alliance)
+      var ally = DriverStation.getAlliance();
       if (ally.isPresent()) {
         if (ally.get() == Alliance.Blue) {
           drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
@@ -113,7 +112,7 @@ public class RobotContainer {
 
     // Telescope Controls
     joystick.rightBumper().onTrue(telescope.setSpeedCommand(7)).onFalse(telescope.setSpeedCommand(0));
-    joystick.leftBumper().onTrue(telescope.setSpeedCommand(-7)).onFalse(telescope.setSpeedCommand(0));
+    joystick.leftBumper().onTrue(telescope.setSpeedCommand(-5)).onFalse(telescope.setSpeedCommand(-1));
 
     // == Launchpad ==
     button[0][0].whileTrue(drivetrain.applyRequest(() -> brake)); // Motor Brake
@@ -125,10 +124,14 @@ public class RobotContainer {
     button[0][2].onTrue(Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote()));   // Set Intake Angle to Position to intake note and intake note
     button[1][2].onTrue(intakePivot.intakeWeUp());   // Set Intake Angle to position to feed note to shooter
     button[2][2].onTrue(intakeRollers.outtakeNote()); // Outake
-    button[3][2].onTrue(intakeRollers.slowOuttakeNote());
+    button[3][2].onTrue(intakePivot.intakeAmp());
+    button[4][2].onTrue(intakeRollers.slowOuttakeNote());
     button[0][3].onTrue(shooterPivot.setAngleFromShuffle()); // Shuffle Angler
 
     button[3][0].onTrue(intakePivot.resetAngle());
+
+    button[0][6].onTrue(winch.setSpeedCommand(3)).onFalse(winch.setSpeedCommand(0));
+    button[1][6].onTrue(winch.setSpeedCommand(-3)).onFalse(winch.setSpeedCommand(0));
 
     // AutoAim
     final AprilTagFieldLayout field = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
@@ -178,7 +181,6 @@ public class RobotContainer {
     NamedCommands.registerCommand("intake", this.getIntakeNote());
     NamedCommands.registerCommand("intakeBack", intakePivot.intakeWeUp().withTimeout(3));
 
-    configureBindings();
   }
 
   public Pose2d curPose() {
