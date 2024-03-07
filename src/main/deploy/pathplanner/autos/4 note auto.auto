@@ -30,9 +30,15 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "shooterStart"
+          }
+        },
+        {
           "type": "wait",
           "data": {
-            "waitTime": 0.2
+            "waitTime": 0.4
           }
         },
         {
@@ -54,9 +60,15 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "shooterStart"
+          }
+        },
+        {
           "type": "wait",
           "data": {
-            "waitTime": 0.2
+            "waitTime": 0.4
           }
         },
         {
@@ -78,9 +90,15 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "shooterStart"
+          }
+        },
+        {
           "type": "wait",
           "data": {
-            "waitTime": 0.2
+            "waitTime": 0.4
           }
         },
         {

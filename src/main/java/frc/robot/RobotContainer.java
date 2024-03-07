@@ -185,7 +185,7 @@ public class RobotContainer {
     }
 
     NamedCommands.registerCommand("intake", this.getIntakeNote());
-    NamedCommands.registerCommand("intakeBack", this.lowBack());
+    NamedCommands.registerCommand("intakeBack", intakePivot.intakeWeUp());
     NamedCommands.registerCommand("outtake", this.shotSequence());
     NamedCommands.registerCommand("shooterStart", this.shooterStart());
     NamedCommands.registerCommand("shooterStop", this.shooterStop());
@@ -202,11 +202,11 @@ public class RobotContainer {
   }
   
   public Command shooterStart() {
-    return shooterAngle();
+    return Commands.sequence(shooterPivot.setAngleCommand(36).withTimeout(1), this.shooterAngle().withTimeout(.5));
   }
 
   public Command lowBack() {
-    return Commands.parallel(intakePivot.intakeWeUp(), Commands.run(() -> shooterPivot.setAngleCommand(36)).withTimeout(.5));
+    return Commands.parallel(intakePivot.intakeWeUp(), shooterPivot.setAngleCommand(36)).withTimeout(1);
   }
 
   public Command shotSequence() {
@@ -289,7 +289,7 @@ public class RobotContainer {
     // );
 
     Command pathTest = AutoBuilder.buildAuto("4 note auto");
-    shooterPivot.setDefaultCommand(this.shooterAngle());
+    
 
 
     //return Commands.parallel(pathTest, this.shooterAngle().asProxy());
