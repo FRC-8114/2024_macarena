@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.photonvision.PhotonUtils;
+
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -47,7 +49,7 @@ public class RobotContainer {
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController joystick = new CommandXboxController(0);
-  public final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain;
+  public static final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain;
 
   // Initialize Subsystems
   public final IntakePivot intakePivot = new IntakePivot();
@@ -61,6 +63,9 @@ public class RobotContainer {
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
       .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // I want field-centric driving in open loop
+  private final SwerveRequest.FieldCentricFacingAngle angleDrive = new SwerveRequest.FieldCentricFacingAngle()
+      .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1)
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
   private final Telemetry logger = new Telemetry(MaxSpeed);
@@ -77,23 +82,31 @@ public class RobotContainer {
         if (ally.get() == Alliance.Blue) {
           drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
               drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive with negative Y (forward)
-                  .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                  .withRotationalRate(joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                  .withVelocityY(joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                  .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
               ));
+          
         }
         if (ally.get() == Alliance.Red) {
           drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
               drivetrain.applyRequest(() -> drive.withVelocityX(joystick.getLeftY() * MaxSpeed) // Drive with negative Y (forward)
-                  .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with positive X (left)
-                  .withRotationalRate(joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with positive X (left)
+                  .withVelocityY(joystick.getLeftX() * MaxSpeed) // Drive left with positive X (left)
+                  .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with positive X (left)
               ));
+          // button[2][3].whileTrue( 
+          //   drivetrain.applyRequest(() -> angleDrive.withVelocityX(joystick.getLeftY() * TunerConstants.kSpeedAt12VoltsMps) // Drive with negative Y (forward)
+          //   .withVelocityY(joystick.getLeftX() * TunerConstants.kSpeedAt12VoltsMps) // Drive left with positive X (left)
+          //   .withTargetDirection(PhotonUtils.getYawToPose(curPose(), field.getTagPose(4).get().toPose2d())))
+          // );
+          // button[3][3].whileTrue(Commands.run(() -> System.out.println("" + PhotonUtils.getYawToPose(curPose(), field.getTagPose(4).get().toPose2d()).getDegrees())));
+          
         }
       }
       else {
         drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
               drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive with negative Y (forward)
-                  .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                  .withRotationalRate(joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                  .withVelocityY(joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                  .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
               ));
       }
 
@@ -110,6 +123,9 @@ public class RobotContainer {
 
     drivetrain.registerTelemetry(logger::telemeterize);
 
+
+    shooterPivot.setDefaultCommand(shooterPivot.setAngleCommand(59));
+
     // Telescope Controls
     joystick.rightBumper().onTrue(telescope.setSpeedCommand(7)).onFalse(telescope.setSpeedCommand(0));
     joystick.leftBumper().onTrue(telescope.setSpeedCommand(-5)).onFalse(telescope.setSpeedCommand(-1));
@@ -119,14 +135,15 @@ public class RobotContainer {
     // button[0][1].onTrue(winch.setSpeedCommand(11)).onFalse(winch.setSpeedCommand(0)); // Pull Winch
     // button[0][2]
     // button[0][3]
-    button[1][1].whileTrue(shooterFlywheel.setSpeedFromShuffle()).onFalse(shooterFlywheel.stopFlywheels());
-    button[0][1].whileTrue(shooterFlywheel.startFlywheels()).onFalse(shooterFlywheel.stopFlywheels()); // Start Flywheels // Stop Flywheels
-    button[0][2].onTrue(Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote()));   // Set Intake Angle to Position to intake note and intake note
-    button[1][2].onTrue(intakePivot.intakeWeUp());   // Set Intake Angle to position to feed note to shooter
+    button[1][1].onTrue(shooterFlywheel.stopFlywheels());
+    button[0][1].onTrue(shooterFlywheel.startFlywheels()); // Start Flywheels // Stop Flywheels
+    button[0][2].onTrue(Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote())).whileTrue(shooterPivot.setAngleCommand(37));   // Set Intake Angle to Position to intake note and intake note
+    button[1][2].onTrue(intakePivot.intakeWeUp()).whileTrue(shooterPivot.setAngleCommand(37));   // Set Intake Angle to position to feed note to shooter
     button[2][2].onTrue(intakeRollers.outtakeNote()); // Outake
-    button[3][2].onTrue(intakePivot.intakeAmp());
+    button[3][2].onTrue(this.shotSequence());
     button[4][2].onTrue(intakeRollers.slowOuttakeNote());
-    button[0][3].onTrue(shooterPivot.setAngleFromShuffle()); // Shuffle Angler
+
+    // button[0][3].onTrue(shooterPivot.setAngleFromShuffle()); // Shuffle Angler
 
     button[3][0].onTrue(intakePivot.resetAngle());
 
@@ -134,24 +151,13 @@ public class RobotContainer {
     button[1][6].onTrue(winch.setSpeedCommand(-3)).onFalse(winch.setSpeedCommand(0));
 
     // AutoAim
-    final AprilTagFieldLayout field = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
 
-    try {
-      switch (DriverStation.getAlliance().get()) {
-        case Blue:
-          button[0][4].onTrue(
-              shooterPivot.autoAngleFromPose(curPose(), field.getTagPose(7).get()));
+    button[1][3].whileTrue(shooterAngle());
+    button[0][3].whileTrue(shooterPivot.setAngleCommand(37));
+    button[0][4].whileTrue(shooterPivot.setAngleFromShuffle());
 
-        case Red:
-          button[0][4].onTrue(
-              shooterPivot.autoAngleFromPose(curPose(), field.getTagPose(4).get()));
-      }
-    } catch (NoSuchElementException e) {
-      System.err.println("Invalid alliance or tag pose idk!!!!");
-      System.err.println(e.getCause());
-    }
 
-    //SysID
+    //SysI6
     // joystick.povUp().and(joystick.a()).onTrue(shooterFlywheel.sysIdQuasistatic(Direction.kForward));
     // joystick.povUp().and(joystick.b()).onTrue(shooterFlywheel.sysIdQuasistatic(Direction.kReverse));
     joystick.povUp().and(joystick.x()).whileTrue(trap.setVoltageCommand(-6)).onFalse(trap.setVoltageCommand(0));
@@ -179,7 +185,11 @@ public class RobotContainer {
     }
 
     NamedCommands.registerCommand("intake", this.getIntakeNote());
-    NamedCommands.registerCommand("intakeBack", intakePivot.intakeWeUp().withTimeout(3));
+    NamedCommands.registerCommand("intakeBack", this.lowBack());
+    NamedCommands.registerCommand("outtake", this.shotSequence());
+    NamedCommands.registerCommand("shooterStart", this.shooterStart());
+    NamedCommands.registerCommand("shooterStop", this.shooterStop());
+    NamedCommands.registerCommand("flywheelStart", shooterFlywheel.startFlywheels());
 
   }
 
@@ -189,6 +199,48 @@ public class RobotContainer {
 
   public Command getIntakeNote() {
     return Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote());
+  }
+  
+  public Command shooterStart() {
+    return shooterAngle();
+  }
+
+  public Command lowBack() {
+    return Commands.parallel(intakePivot.intakeWeUp(), Commands.run(() -> shooterPivot.setAngleCommand(36)).withTimeout(.5));
+  }
+
+  public Command shotSequence() {
+    return Commands.parallel(shooterFlywheel.startFlywheels().withTimeout(2), Commands.waitSeconds(1.1).andThen(intakeRollers.outtakeNote()));
+  }
+
+  public Command shooterStop() {
+    return Commands.parallel(shooterFlywheel.stopFlywheels(), shooterPivot.setAngleCommand(59));
+  }
+
+  final AprilTagFieldLayout field = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+  public Command shooterAngle() {
+    var alliance = DriverStation.getAlliance();
+
+    if(alliance.isPresent()) {
+      if(alliance.get() == DriverStation.Alliance.Blue)
+        return shooterPivot.autoAngleFromPose(field.getTagPose(7).get());
+      else if(alliance.get() == DriverStation.Alliance.Red)
+        return shooterPivot.autoAngleFromPose(field.getTagPose(4).get());
+    }
+    return shooterPivot.autoAngleFromPose(field.getTagPose(4).get());
+
+  }
+
+  public Rotation2d getShotAngle() {
+    return PhotonUtils.getYawToPose(curPose(), field.getTagPose(4).get().toPose2d());
+  }
+
+  public Command driveAngle() {
+    System.out.println("" + PhotonUtils.getYawToPose(curPose(), field.getTagPose(4).get().toPose2d()));
+    return drivetrain.applyRequest(() -> angleDrive.withVelocityX(joystick.getLeftY() * MaxSpeed) // Drive with negative Y (forward)
+                  .withVelocityY(joystick.getLeftX() * MaxSpeed) // Drive left with positive X (left)
+                  .withTargetDirection(getShotAngle()) // Drive counterclockwise with positive X (left)
+              );
   }
 
   public Command moveToPose(Pose2d targetPose) {
@@ -228,7 +280,7 @@ public class RobotContainer {
     //     3.5,2.0,
     //     Units.degreesToRadians(540), Units.degreesToRadians(720));
 
-    // // Since AutoBuilder is configured, we can use it to build pathfinding commands
+    // // Sice AutoBuilder is configured, we can use it to build pathfinding commands
     // Command pathfindingCommand = AutoBuilder.pathfindThenFollowPath(
     //     path,
     //     constraints,
@@ -236,7 +288,11 @@ public class RobotContainer {
     //         // before attempting to rotate.
     // );
 
-    Command pathTest = AutoBuilder.buildAuto("New Auto");
+    Command pathTest = AutoBuilder.buildAuto("4 note auto");
+    shooterPivot.setDefaultCommand(this.shooterAngle());
+
+
+    //return Commands.parallel(pathTest, this.shooterAngle().asProxy());
     return pathTest;
   }
 }

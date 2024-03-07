@@ -52,14 +52,24 @@ public class ShooterFlywheel implements Subsystem {
         configureMotors();
     }
 
+
+    Boolean upToSpeed = false;
     public Command setSpeedCommand(double speedRPM) {
+        upToSpeed = false;
         return run(() -> {
             // shooterFlywheelLeft.sshooterMagicVelocityetVoltage(voltage);
             // shooterFlywheelRight.setVoltage(voltage);
-            System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 + " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
+            // System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 + " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
             shooterFlywheelLeft.setControl(mmConfig.withVelocity(speedRPM/60));
             shooterFlywheelRight.setControl(mmConfig.withVelocity((speedRPM)/60));
-        });
+        }).until(() -> { if(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 > (6100)) {
+            upToSpeed = true; }
+            if (upToSpeed && (shooterFlywheelLeft.getVelocity().getValueAsDouble()*60) < 5750) {
+                upToSpeed = false;
+                return true;
+            }
+                return false;
+        }).andThen(stopFlywheels());
     }
     public Command startFlywheels() {
         return setSpeedCommand(6350);

@@ -28,18 +28,18 @@ public class IntakeRollers extends SubsystemBase {
 
     public IntakeRollers() {
         intakeRollers.setIdleMode(IdleMode.kBrake);
-        intakeRollers.setOpenLoopRampRate(0.25);
+        intakeRollers.setOpenLoopRampRate(0.35);
     }
 
     public Command intakeNote() {
-        return run(() -> intakeRollers.setVoltage(-9))
+        return run(() -> intakeRollers.setVoltage(-10))
             .until(() -> limSwitch.get() || intakeRollers.getOutputCurrent() > 80.0)
             .andThen(intakeStop());
     }
 
     public Command outtakeNote() {
         return run(() -> intakeRollers.setVoltage(12))
-            .withTimeout(1.5)
+            .withTimeout(.75)
             .andThen(intakeStop());
     }
 

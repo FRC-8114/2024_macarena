@@ -14,6 +14,8 @@ import org.photonvision.PhotonUtils;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.RobotContainer;
+
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
@@ -47,7 +49,7 @@ public class ShooterPivot implements Subsystem {
     private final CANSparkMax shooterPivot = new CANSparkMax(shooterPivotID, MotorType.kBrushless);
     private final CANcoder shooterPivotEncoder = new CANcoder(4, "canivore");
 
-    private final TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(3, 2);
+    private final TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(5, 4);
     private final ProfiledPIDController controller = new ProfiledPIDController(kP, kI, kD, constraints, kDt);
     private final ArmFeedforward feedforward = new ArmFeedforward(kS, kG, kV);
     private GenericEntry shootAngle = Shuffleboard.getTab("FieldInfo").add("Shooter Angle", 0.0).withWidget(BuiltInWidgets.kNumberSlider).withProperties(Map.of("min", 0, "max", 65)).getEntry();
@@ -57,16 +59,16 @@ public class ShooterPivot implements Subsystem {
         shooterPivotEncoder.getConfigurator().apply(new MagnetSensorConfigs().withSensorDirection(SensorDirectionValue.Clockwise_Positive).withMagnetOffset(0.096923828125));
 
         // TODO: Generate test data
-        angleMap.put(Units.inchesToMeters(16), 58.79);
-        angleMap.put(Units.inchesToMeters(16+12), 51.47);
-        angleMap.put(Units.inchesToMeters(16+24), 46.59);
-        angleMap.put(Units.inchesToMeters(16+36), 42.37);
-        angleMap.put(Units.inchesToMeters(16+48), 41.48);
-        angleMap.put(Units.inchesToMeters(16+60), 40.00);
-        angleMap.put(Units.inchesToMeters(16+72), 38.60);
-        angleMap.put(Units.inchesToMeters(16+84), 38.60);
-        angleMap.put(Units.inchesToMeters(16+96), 35.72);
-        angleMap.put(Units.inchesToMeters(16+108), 34.61);
+        angleMap.put(Units.inchesToMeters(16+38.5), 58.99);
+        angleMap.put(Units.inchesToMeters(16+12+38.5), 51.77);
+        angleMap.put(Units.inchesToMeters(16+24+38.5), 46.89);
+        angleMap.put(Units.inchesToMeters(16+36+38.5), 44.67);
+        angleMap.put(Units.inchesToMeters(16+48+38.5), 41.78);
+        angleMap.put(Units.inchesToMeters(16+60+38.5), 40.00);
+        angleMap.put(Units.inchesToMeters(16+72+38.5), 38.00);
+        angleMap.put(Units.inchesToMeters(16+84+38.5), 37.275);
+        angleMap.put(Units.inchesToMeters(16+96+38.5), 36.00);
+        angleMap.put(Units.inchesToMeters(16+108+38.5), 34.89);
 
     }
 
@@ -78,7 +80,7 @@ public class ShooterPivot implements Subsystem {
         return run(() -> {
             // System.out.println(-(controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), goal))
             //         + " | " + -(feedforward.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), controller.getSetpoint().velocity)) + " | " + shootAngle.getDouble(0.0) + " | " + goal);
-            shooterPivot.setVoltage((controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), goal)
+            shooterPivot.setVoltage((controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), Units.degreesToRotations(goal))
                     + feedforward.calculate(Units.rotationsToRadians(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble()), controller.getSetpoint().velocity)));
         });
     }
@@ -90,7 +92,16 @@ public class ShooterPivot implements Subsystem {
             //         + " | " + (feedforward.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), controller.getSetpoint().velocity)) + " | " + Units.degreesToRotations(shootAngle.getDouble(0.0)));
             // System.out.println("" + Units.degreesToRotations(shootAngle.getDouble(0.0)));
             shooterPivot.setVoltage((controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), Units.degreesToRotations(shootAngle.getDouble(0.0)))
-                    + feedforward.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), controller.getSetpoint().velocity)));
+                    + feedforward.calculate(Units.rotationsToRadians(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble()), controller.getSetpoint().velocity)));
+        });
+    }
+
+    public Command setAutoAngleCommand(Pose3d goalPose3d) {
+        return run(() -> {
+            // System.out.println(-(controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), goal))
+            //         + " | " + -(feedforward.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), controller.getSetpoint().velocity)) + " | " + shootAngle.getDouble(0.0) + " | " + goal);
+            shooterPivot.setVoltage((controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), Units.degreesToRotations(getShotAngle(goalPose3d)))
+                    + feedforward.calculate(Units.rotationsToRadians(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble()), controller.getSetpoint().velocity)));
         });
     }
 
@@ -102,12 +113,16 @@ public class ShooterPivot implements Subsystem {
         return setAngleCommand(angleMap.get(distance));
     }
 
-    public Command autoAngleFromPose(Pose2d currentPose, Pose3d goalPose) {
-        return autoAngle(PhotonUtils.getDistanceToPose(currentPose, goalPose.toPose2d()));
+    public Command autoAngleFromPose(Pose3d goalPose) {
+        return setAutoAngleCommand(goalPose);
     }
 
-    public Command printEncoder() {
-        return run(() -> System.out.println(Units.rotationsToDegrees(shooterPivotEncoder.getPosition().getValueAsDouble()) + " | " + shooterPivotEncoder.getPosition().getValueAsDouble())).ignoringDisable(true);
+    public double getShotAngle(Pose3d goalPose) {
+        return angleMap.get(PhotonUtils.getDistanceToPose(RobotContainer.drivetrain.getState().Pose, goalPose.toPose2d()));
+    }
+
+    public Command printEncoder(Pose2d currentPose, Pose3d goalPose) {
+        return run(() -> System.out.println(angleMap.get(PhotonUtils.getDistanceToPose(currentPose, goalPose.toPose2d())) + " | " + PhotonUtils.getDistanceToPose(currentPose, goalPose.toPose2d()))).ignoringDisable(true);
         // return run(() -> SmartDashboard.putNumber("Shooter Pivot Position", shooterPivotEncoder.getPosition().getValueAsDouble()));
     }
 

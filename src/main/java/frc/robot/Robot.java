@@ -34,7 +34,7 @@ public class Robot extends TimedRobot {
     AprilTagFields.k2024Crescendo.loadAprilTagLayoutField(),
     new Transform3d(new Translation3d(-0.3429, 0, 0.216),
     new Rotation3d(0, -0.436, 3.1415)));
-  boolean usingTags = false;
+  boolean usingTags = true;
 
   @Override
   public void robotInit() {

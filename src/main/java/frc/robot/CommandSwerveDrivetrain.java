@@ -2,9 +2,12 @@ package frc.robot;
 
 import java.util.function.Supplier;
 
+import org.photonvision.PhotonUtils;
+
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -13,6 +16,8 @@ import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -21,6 +26,7 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.TunerConstants;
 
 /**
@@ -98,6 +104,17 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
         return run(() -> this.setControl(requestSupplier.get()));
+    }
+
+    final AprilTagFieldLayout field = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+    private final CommandXboxController joystick = new CommandXboxController(0);
+    private final SwerveRequest.FieldCentricFacingAngle angleDrive = new SwerveRequest.FieldCentricFacingAngle()
+      .withDeadband(TunerConstants.kSpeedAt12VoltsMps * 0.1).withRotationalDeadband(1.5 * Math.PI * 0.1)
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+    public Command applyAngleDrive() {
+        return run(() -> this.applyRequest(() -> angleDrive.withVelocityX(joystick.getLeftY() * TunerConstants.kSpeedAt12VoltsMps) // Drive with negative Y (forward)
+        .withVelocityY(joystick.getLeftX() * TunerConstants.kSpeedAt12VoltsMps) // Drive left with positive X (left)
+        .withTargetDirection(PhotonUtils.getYawToPose(this.getState().Pose, field.getTagPose(4).get().toPose2d()))));
     }
 
     public Command getAutoPath(String pathName) {

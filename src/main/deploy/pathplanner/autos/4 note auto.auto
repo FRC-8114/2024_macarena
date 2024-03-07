@@ -1,0 +1,103 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.325730468864645,
+      "y": 5.562647359246215
+    },
+    "rotation": 0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "outtake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "4 note part 1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeBack"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.2
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "outtake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "4 note part 2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeBack"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.2
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "outtake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "4 note part 3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeBack"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.2
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "outtake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shooterStop"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": false
+}
