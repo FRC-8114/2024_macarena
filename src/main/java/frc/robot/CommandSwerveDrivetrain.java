@@ -87,20 +87,6 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             }, // Change this if the path needs to be flipped on red vs blue
             this); // Subsystem for requirements
     }
-
-    @Override
-    public void seedFieldRelative(Pose2d location) {
-        try {
-            m_stateLock.writeLock().lock();
-
-            System.out.println("troll");
-            m_odometry.resetPosition(Rotation2d.fromDegrees(m_yawGetter.getValue()), m_modulePositions, location);
-            /* We need to update our cached pose immediately so that race conditions don't happen */
-            m_cachedState.Pose = location;
-        } finally {
-            m_stateLock.writeLock().unlock();
-        }
-    }
     
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
         return run(() -> this.setControl(requestSupplier.get()));

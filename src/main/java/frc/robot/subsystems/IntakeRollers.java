@@ -39,7 +39,7 @@ public class IntakeRollers extends SubsystemBase {
 
     public Command outtakeNote() {
         return run(() -> intakeRollers.setVoltage(12))
-            .withTimeout(.75)
+            .withTimeout(.5)
             .andThen(intakeStop());
     }
 

@@ -43,12 +43,12 @@ public class Constants {
         public static final int shooterFlywheelLeftID = 9;
         public static final int shooterFlywheelRightID = 10;
 
-        public static double kP = 2.3006;
+        public static double kP = 2.4206;
         public static double kI = 0.0;
         public static double kD = 0.05;
 
         public static double kS = 0.12517;
-        public static double kV = 0.12135;
+        public static double kV = 0.12235;
         public static double kA = 0.010447;
     }
 

@@ -111,9 +111,9 @@ public class RobotContainer {
       }
 
     // == Xbox Controller ==
-    // joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-    // joystick.b().whileTrue(drivetrain
-    //     .applyRequest(() -> point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
+    joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
+    joystick.b().whileTrue(drivetrain
+        .applyRequest(() -> point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
 
     // joystick.povDown().onTrue(moveToPose(new Pose2d(15.201, 5.574, new Rotation2d(0))));
 
@@ -130,17 +130,22 @@ public class RobotContainer {
     joystick.rightBumper().onTrue(telescope.setSpeedCommand(7)).onFalse(telescope.setSpeedCommand(0));
     joystick.leftBumper().onTrue(telescope.setSpeedCommand(-5)).onFalse(telescope.setSpeedCommand(-1));
 
+    joystick.leftTrigger().onTrue(intakePivot.intakeWeUp()).whileTrue(shooterPivot.setAngleCommand(37));
+    joystick.povDown().onTrue(Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote())).whileTrue(shooterPivot.setAngleCommand(37));
+    joystick.povRight().whileTrue(shooterAngle());
+    joystick.rightTrigger().onTrue(this.shotSequence());
+
     // == Launchpad ==
     button[0][0].whileTrue(drivetrain.applyRequest(() -> brake)); // Motor Brake
     // button[0][1].onTrue(winch.setSpeedCommand(11)).onFalse(winch.setSpeedCommand(0)); // Pull Winch
     // button[0][2]
     // button[0][3]
-    button[1][1].onTrue(shooterFlywheel.stopFlywheels());
-    button[0][1].onTrue(shooterFlywheel.startFlywheels()); // Start Flywheels // Stop Flywheels
+    button[3][1].onTrue(shooterFlywheel.stopFlywheels());
+    button[2][1].onTrue(shooterFlywheel.startFlywheels()); // Start Flywheels // Stop Flywheels
     button[0][2].onTrue(Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote())).whileTrue(shooterPivot.setAngleCommand(37));   // Set Intake Angle to Position to intake note and intake note
     button[1][2].onTrue(intakePivot.intakeWeUp()).whileTrue(shooterPivot.setAngleCommand(37));   // Set Intake Angle to position to feed note to shooter
-    button[2][2].onTrue(intakeRollers.outtakeNote()); // Outake
-    button[3][2].onTrue(this.shotSequence());
+    button[3][2].onTrue(intakeRollers.outtakeNote()); // Outake
+    button[2][2].onTrue(this.shotSequence());
     button[4][2].onTrue(intakeRollers.slowOuttakeNote());
 
     // button[0][3].onTrue(shooterPivot.setAngleFromShuffle()); // Shuffle Angler
@@ -152,16 +157,16 @@ public class RobotContainer {
 
     // AutoAim
 
-    button[1][3].whileTrue(shooterAngle());
+    button[2][3].whileTrue(shooterAngle());
     button[0][3].whileTrue(shooterPivot.setAngleCommand(37));
-    button[0][4].whileTrue(shooterPivot.setAngleFromShuffle());
+    // button[0][4].whileTrue(shooterPivot.setAngleFromShuffle());
 
 
     //SysI6
     // joystick.povUp().and(joystick.a()).onTrue(shooterFlywheel.sysIdQuasistatic(Direction.kForward));
     // joystick.povUp().and(joystick.b()).onTrue(shooterFlywheel.sysIdQuasistatic(Direction.kReverse));
-    joystick.povUp().and(joystick.x()).whileTrue(trap.setVoltageCommand(-6)).onFalse(trap.setVoltageCommand(0));
-    joystick.povUp().and(joystick.y()).whileTrue(trap.setVoltageCommand(6)).onFalse(trap.setVoltageCommand(0));
+    joystick.x().whileTrue(trap.setVoltageCommand(-6)).onFalse(trap.setVoltageCommand(0));
+    joystick.y().whileTrue(trap.setVoltageCommand(6)).onFalse(trap.setVoltageCommand(0));
 
     // shooterPivot.setDefaultCommand(
     //   shooterPivot.setAngleFromShuffle()
@@ -171,9 +176,9 @@ public class RobotContainer {
     // joystick.povRight().onTrue(Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote()));
     // joystick.povUp().onTrue(intakePivot.intakeWeUp());
     // joystick.povDown().onTrue(intakeRollers.outtakeNote());
-    joystick.povLeft().onTrue(shooterPivot.setAngleFromShuffle());
+    // joystick.povLeft().onTrue(shooterPivot.setAngleFromShuffle());
 
-    joystick.rightTrigger().whileTrue(shooterFlywheel.setSpeedCommand(1)).onFalse(shooterFlywheel.stopFlywheels());
+    // joystick.rightTrigger().whileTrue(shooterFlywheel.setSpeedCommand(1)).onFalse(shooterFlywheel.stopFlywheels());
   }
 
   public RobotContainer() {
@@ -184,12 +189,17 @@ public class RobotContainer {
       }
     }
 
-    NamedCommands.registerCommand("intake", this.getIntakeNote());
+    NamedCommands.registerCommand("intake", intakePivot.intakeDown());
+    NamedCommands.registerCommand("intakeRollIn", intakeRollers.intakeNote().withTimeout(2));
     NamedCommands.registerCommand("intakeBack", intakePivot.intakeWeUp());
     NamedCommands.registerCommand("outtake", this.shotSequence());
     NamedCommands.registerCommand("shooterStart", this.shooterStart());
     NamedCommands.registerCommand("shooterStop", this.shooterStop());
     NamedCommands.registerCommand("flywheelStart", shooterFlywheel.startFlywheels());
+    NamedCommands.registerCommand("shooterLoadPosition", shooterPivot.setAngleCommand(37));
+    NamedCommands.registerCommand("feedNote", Commands.waitUntil(shooterPivot::atSetpoint).andThen(intakePivot.intakeWeUp()));
+    NamedCommands.registerCommand("shooterAim", shooterAngle());
+    NamedCommands.registerCommand("shootNote", Commands.waitUntil(shooterPivot::atSetpoint).andThen(this.shotSequence()));
 
   }
 
@@ -198,7 +208,7 @@ public class RobotContainer {
   }
 
   public Command getIntakeNote() {
-    return Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote());
+    return Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote().withTimeout(2));
   }
   
   public Command shooterStart() {
@@ -210,7 +220,7 @@ public class RobotContainer {
   }
 
   public Command shotSequence() {
-    return Commands.parallel(shooterFlywheel.startFlywheels().withTimeout(2), Commands.waitSeconds(1.1).andThen(intakeRollers.outtakeNote()));
+    return Commands.parallel(shooterFlywheel.startFlywheels().withTimeout(1.6).andThen(shooterFlywheel.stopFlywheels()), Commands.waitSeconds(0.85).andThen(intakeRollers.outtakeNote()));
   }
 
   public Command shooterStop() {

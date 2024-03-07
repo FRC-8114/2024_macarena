@@ -57,6 +57,7 @@ public class ShooterPivot implements Subsystem {
     public ShooterPivot() {
         shooterPivot.setIdleMode(IdleMode.kBrake);
         shooterPivotEncoder.getConfigurator().apply(new MagnetSensorConfigs().withSensorDirection(SensorDirectionValue.Clockwise_Positive).withMagnetOffset(0.096923828125));
+        controller.setTolerance(Units.degreesToRotations(2.5));
 
         // TODO: Generate test data
         angleMap.put(Units.inchesToMeters(16+38.5), 58.99);
@@ -65,7 +66,7 @@ public class ShooterPivot implements Subsystem {
         angleMap.put(Units.inchesToMeters(16+36+38.5), 44.67);
         angleMap.put(Units.inchesToMeters(16+48+38.5), 41.78);
         angleMap.put(Units.inchesToMeters(16+60+38.5), 40.00);
-        angleMap.put(Units.inchesToMeters(16+72+38.5), 38.00);
+        angleMap.put(Units.inchesToMeters(16+72+38.5), 37.90);
         angleMap.put(Units.inchesToMeters(16+84+38.5), 37.275);
         angleMap.put(Units.inchesToMeters(16+96+38.5), 36.00);
         angleMap.put(Units.inchesToMeters(16+108+38.5), 34.89);
@@ -74,6 +75,10 @@ public class ShooterPivot implements Subsystem {
 
     public double getAngle() {
         return shooterPivot.getEncoder().getPosition();
+    }
+
+    public boolean atSetpoint() {
+        return controller.atSetpoint();
     }
 
     public Command setAngleCommand(double goal) {
