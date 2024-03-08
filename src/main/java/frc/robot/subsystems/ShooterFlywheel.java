@@ -59,7 +59,7 @@ public class ShooterFlywheel implements Subsystem {
         return run(() -> {
             // shooterFlywheelLeft.sshooterMagicVelocityetVoltage(voltage);
             // shooterFlywheelRight.setVoltage(voltage);
-            System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 + " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
+            // System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 + " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
             shooterFlywheelLeft.setControl(mmConfig.withVelocity(speedRPM/60));
             shooterFlywheelRight.setControl(mmConfig.withVelocity((speedRPM)/60));
         }).until(() -> { if(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 > (6100)) {
@@ -71,6 +71,18 @@ public class ShooterFlywheel implements Subsystem {
                 return false;
         }).andThen(stopFlywheels());
     }
+
+    public Command setSpeedNoStop(double speedRPM) {
+        upToSpeed = false;
+        return run(() -> {
+            // shooterFlywheelLeft.sshooterMagicVelocityetVoltage(voltage);
+            // shooterFlywheelRight.setVoltage(voltage);
+            // System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 + " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
+            shooterFlywheelLeft.setControl(mmConfig.withVelocity(speedRPM/60));
+            shooterFlywheelRight.setControl(mmConfig.withVelocity((speedRPM)/60));
+        });
+    }
+
     public Command startFlywheels() {
         return setSpeedCommand(6300);
     };

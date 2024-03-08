@@ -65,12 +65,16 @@ public class IntakePivot extends SubsystemBase {
         });
     }
 
+    public Command intakeSetVoltage(double voltage) {
+        return run(() -> intakePivot.setVoltage(voltage));
+    }
+
     public Command intakeDown() {
         return setAngleCommand(0.39365264773368835).until(() -> intakePivotEncoder.getPosition() > 0.3765264773368835).andThen(stopMotor());
     }
 
     public Command intakeAmp() {
-        return setAngleCommand(0.39365264773368835).until(() -> intakePivotEncoder.getPosition() > 0.3465264773368835).andThen(stopMotor());
+        return setAngleCommand(0.17).until(() -> intakePivotEncoder.getPosition() > 0.16).andThen(stopMotor());
     }
 
     public Command intakeWeUp() {

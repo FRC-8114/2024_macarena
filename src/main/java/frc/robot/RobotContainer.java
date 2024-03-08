@@ -73,6 +73,7 @@ public class RobotContainer {
   public launchpad launch = new launchpad();
 
   private launchtrigger[][] button = new launchtrigger[8][8];
+  private double turtleMode = 1.0;
 
   public void configureBindings() {
     // TODO: Fix positives / negatives
@@ -81,17 +82,17 @@ public class RobotContainer {
       if (ally.isPresent()) {
         if (ally.get() == Alliance.Blue) {
           drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
-              drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive with negative Y (forward)
-                  .withVelocityY(joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                  .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+              drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed * turtleMode) // Drive with negative Y (forward)
+                  .withVelocityY(joystick.getLeftX() * MaxSpeed * turtleMode) // Drive left with negative X (left)
+                  .withRotationalRate(-joystick.getRightX() * MaxAngularRate * turtleMode) // Drive counterclockwise with negative X (left)
               ));
           
         }
         if (ally.get() == Alliance.Red) {
           drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
-              drivetrain.applyRequest(() -> drive.withVelocityX(joystick.getLeftY() * MaxSpeed) // Drive with negative Y (forward)
-                  .withVelocityY(joystick.getLeftX() * MaxSpeed) // Drive left with positive X (left)
-                  .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with positive X (left)
+              drivetrain.applyRequest(() -> drive.withVelocityX(joystick.getLeftY() * MaxSpeed * turtleMode) // Drive with negative Y (forward)
+                  .withVelocityY(joystick.getLeftX() * MaxSpeed* turtleMode) // Drive left with positive X (left)
+                  .withRotationalRate(-joystick.getRightX() * MaxAngularRate * turtleMode) // Drive counterclockwise with positive X (left)
               ));
           // button[2][3].whileTrue( 
           //   drivetrain.applyRequest(() -> angleDrive.withVelocityX(joystick.getLeftY() * TunerConstants.kSpeedAt12VoltsMps) // Drive with negative Y (forward)
@@ -104,9 +105,9 @@ public class RobotContainer {
       }
       else {
         drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
-              drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive with negative Y (forward)
-                  .withVelocityY(joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                  .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+              drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed * turtleMode) // Drive with negative Y (forward)
+                  .withVelocityY(joystick.getLeftX() * MaxSpeed * turtleMode) // Drive left with negative X (left)
+                  .withRotationalRate(-joystick.getRightX() * MaxAngularRate * turtleMode) // Drive counterclockwise with negative X (left)
               ));
       }
 
@@ -134,6 +135,13 @@ public class RobotContainer {
     joystick.povDown().onTrue(Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote())).whileTrue(shooterPivot.setAngleCommand(37));
     joystick.povRight().whileTrue(shooterAngle());
     joystick.rightTrigger().onTrue(this.shotSequence());
+    joystick.povUp().onTrue(Commands.runOnce(() -> {
+      if (turtleMode == 1) {
+        turtleMode = 0.25;
+      }
+      else 
+        turtleMode = 1.0;
+    }));
 
     // == Launchpad ==
     button[0][0].whileTrue(drivetrain.applyRequest(() -> brake)); // Motor Brake
@@ -147,6 +155,7 @@ public class RobotContainer {
     button[3][2].onTrue(intakeRollers.outtakeNote()); // Outake
     button[2][2].onTrue(this.shotSequence());
     button[4][2].onTrue(intakeRollers.slowOuttakeNote());
+    button[5][2].onTrue(intakePivot.intakeSetVoltage(-4)).onFalse(intakePivot.stopMotor());
 
     // button[0][3].onTrue(shooterPivot.setAngleFromShuffle()); // Shuffle Angler
 
@@ -193,9 +202,10 @@ public class RobotContainer {
     NamedCommands.registerCommand("intakeRollIn", intakeRollers.intakeNote().withTimeout(2));
     NamedCommands.registerCommand("intakeBack", intakePivot.intakeWeUp());
     NamedCommands.registerCommand("outtake", this.shotSequence());
+    NamedCommands.registerCommand("quickShot", Commands.waitUntil(shooterPivot::atSetpoint).andThen(intakeRollers.outtakeNote().andThen(shooterFlywheel.stopFlywheels())));
     NamedCommands.registerCommand("shooterStart", this.shooterStart());
     NamedCommands.registerCommand("shooterStop", this.shooterStop());
-    NamedCommands.registerCommand("flywheelStart", shooterFlywheel.startFlywheels());
+    NamedCommands.registerCommand("flywheelStart", shooterFlywheel.setSpeedNoStop(6300));
     NamedCommands.registerCommand("shooterLoadPosition", shooterPivot.setAngleCommand(37));
     NamedCommands.registerCommand("feedNote", Commands.waitUntil(shooterPivot::atSetpoint).andThen(intakePivot.intakeWeUp()));
     NamedCommands.registerCommand("shooterAim", shooterAngle());
@@ -210,6 +220,10 @@ public class RobotContainer {
   public Command getIntakeNote() {
     return Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote().withTimeout(2));
   }
+
+  public Command ampShot() {
+    return intakePivot.intakeAmp().andThen(intakeRollers.slowOuttakeNote());
+  }
   
   public Command shooterStart() {
     return Commands.sequence(shooterPivot.setAngleCommand(36).withTimeout(1), this.shooterAngle().withTimeout(.5));
@@ -220,7 +234,7 @@ public class RobotContainer {
   }
 
   public Command shotSequence() {
-    return Commands.parallel(shooterFlywheel.startFlywheels().withTimeout(1.6).andThen(shooterFlywheel.stopFlywheels()), Commands.waitSeconds(0.85).andThen(intakeRollers.outtakeNote()));
+    return Commands.deadline(Commands.waitSeconds(0.85).andThen(intakeRollers.outtakeNote()), (shooterFlywheel.startFlywheels().withTimeout(1.6).andThen(shooterFlywheel.stopFlywheels())));
   }
 
   public Command shooterStop() {
@@ -299,7 +313,6 @@ public class RobotContainer {
     // );
 
     Command pathTest = AutoBuilder.buildAuto("4 note auto");
-    
 
 
     //return Commands.parallel(pathTest, this.shooterAngle().asProxy());

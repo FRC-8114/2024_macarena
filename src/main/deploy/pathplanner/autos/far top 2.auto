@@ -1,0 +1,37 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 0.9158511897622923,
+      "y": 6.604911811820771
+    },
+    "rotation": 66.03751102542182
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "outtake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "far top 1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "far top 2"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": false
+}
