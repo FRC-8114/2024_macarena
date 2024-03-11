@@ -10,13 +10,13 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkBase.IdleMode;
 
 public class Trap implements Subsystem {
-    private final CANSparkMax trap = new CANSparkMax(trapID, MotorType.kBrushless);
+    // private final CANSparkMax trap = new CANSparkMax(trapID, MotorType.kBrushless);
 
-    public Trap() {
-        trap.setIdleMode(IdleMode.kBrake);
-    }
+    // public Trap() {
+    //     trap.setIdleMode(IdleMode.kBrake);
+    // }
 
-    public Command setVoltageCommand(double voltage) {
-        return run(() -> trap.setVoltage(voltage));
-    }
+    // public Command setVoltageCommand(double voltage) {
+    //     return run(() -> trap.setVoltage(voltage));
+    // }
 }

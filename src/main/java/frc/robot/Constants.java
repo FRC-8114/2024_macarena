@@ -1,12 +1,14 @@
 package frc.robot;
 
+import edu.wpi.first.units.Units;
+
 public class Constants {
     public static final class IntakeConstants {
         public static final int intakePivotID = 51;
         public static final int intakeRollersID = 52;
         public static final int limSwitchDIO = 7;
 
-        public static double kP = 13;
+        public static double kP = 12;
         public static double kI = 0.0;
         public static double kD = 0.1;
     
@@ -19,21 +21,26 @@ public class Constants {
         public static double kMaxAcceleration = 0.75;
     };
 
-    public static final class ShooterRotationConstants {
+    public static final class ShooterPivotConstants {
         public static final int shooterPivotID = 60;
         public static final int shooterEncoder = 4;
 
-        public static double kP = 18;
-        public static double kI = 0.0;
-        public static double kD = 0.0;
+        public static double kP = 45;
+        public static double kI = 0.01;
+        public static double kD = 0.1;
 
-        public static double kS = .7;
-        public static double kV = 1;
-        public static double kG = 0.39;
+        public static double kS = 0.95;
+        public static double kV = 1.2;
+        public static double kG = 0.83;
         public static double kDt = 0.02;
 
         public static double kMaxVelocity = 1.75;
         public static double kMaxAcceleration = 0.75;
+        public static double kMaxRotation = 65; // IN DEGREES
+
+        public static double gearRatio = 100.0;
+
+        public static double encoderMagnentOffset = 0.0966796875;  // TODO: update value
     }
 
     public static final class ShooterFlywheelConstants {
@@ -53,7 +60,7 @@ public class Constants {
     }
 
     public static final class TelescopeConstants {
-        public static final int telescopeID = 59;
+        public static int telescopeID = 59;
     }
     
     public static final class WinchConstants {

@@ -33,7 +33,7 @@ public class IntakeRollers extends SubsystemBase {
 
     public Command intakeNote() {
         return run(() -> intakeRollers.setVoltage(-10))
-            .until(() -> limSwitch.get() || intakeRollers.getOutputCurrent() > 80.0)
+            .until(() -> limSwitch.get() || intakeRollers.getOutputCurrent() > 72.0)
             .andThen(intakeStop());
     }
 

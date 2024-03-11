@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.3725738150477713,
-      "y": 5.550936522700434
+      "x": 0.8045982425773681,
+      "y": 4.450117887396973
     },
-    "rotation": 0
+    "rotation": -61.89373017919813
   },
   "command": {
     "type": "sequential",
@@ -37,7 +37,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "drive back"
+                  "pathName": "1 note bottom 1"
                 }
               },
               {
@@ -72,7 +72,7 @@
                     {
                       "type": "wait",
                       "data": {
-                        "waitTime": 1.64
+                        "waitTime": 5.0
                       }
                     }
                   ]
@@ -88,13 +88,13 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "feedNote"
+                  "name": "shooterLoadPosition"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "shooterLoadPosition"
+                  "name": "feedNote"
                 }
               }
             ]

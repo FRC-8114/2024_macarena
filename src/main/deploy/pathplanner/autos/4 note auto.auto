@@ -12,15 +12,73 @@
     "data": {
       "commands": [
         {
-          "type": "named",
+          "type": "race",
           "data": {
-            "name": "outtake"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "startAim"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "shootNote"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "4 note part 1"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "4 note part 1"
+                }
+              },
+              {
+                "type": "race",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "intake"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "race",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "intakeRollIn"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.85
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         },
         {
@@ -30,13 +88,19 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "feedNote"
+                  "name": "shooterLoadPosition"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "shooterLoadPosition"
+                  "name": "feedNote"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.0
                 }
               }
             ]
@@ -57,14 +121,65 @@
                 "data": {
                   "name": "shootNote"
                 }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 4.0
+                }
               }
             ]
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "4 note part 2"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "4 note part 2"
+                }
+              },
+              {
+                "type": "race",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "intake"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "race",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "intakeRollIn"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 2.47
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         },
         {
@@ -74,13 +189,19 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "feedNote"
+                  "name": "shooterLoadPosition"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "shooterLoadPosition"
+                  "name": "feedNote"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.0
                 }
               }
             ]
@@ -101,14 +222,65 @@
                 "data": {
                   "name": "shootNote"
                 }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 4.0
+                }
               }
             ]
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "4 note part 3"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "4 note part 3"
+                }
+              },
+              {
+                "type": "race",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "intake"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.0
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "race",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "intakeRollIn"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.78
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         },
         {
@@ -118,13 +290,19 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "feedNote"
+                  "name": "shooterLoadPosition"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "shooterLoadPosition"
+                  "name": "feedNote"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.0
                 }
               }
             ]
@@ -144,6 +322,12 @@
                 "type": "named",
                 "data": {
                   "name": "shootNote"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 4.0
                 }
               }
             ]

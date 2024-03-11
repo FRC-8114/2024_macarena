@@ -2,15 +2,21 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.3725738150477713,
-      "y": 5.550936522700434
+      "x": 1.454549670868242,
+      "y": 7.330983677659224
     },
-    "rotation": 0
+    "rotation": -90.0
   },
   "command": {
     "type": "sequential",
     "data": {
       "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "amp 1"
+          }
+        },
         {
           "type": "race",
           "data": {
@@ -18,67 +24,34 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "shooterAim"
+                  "name": "ampAim"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "shootNote"
+                  "name": "ampShot"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "waitedOuttake"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 4.0
                 }
               }
             ]
           }
         },
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "drive back"
-                }
-              },
-              {
-                "type": "race",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "intake"
-                      }
-                    },
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 1.0
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "type": "race",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "intakeRollIn"
-                      }
-                    },
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 1.64
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
+            "pathName": "amp 2"
           }
         },
         {
@@ -96,8 +69,20 @@
                 "data": {
                   "name": "shooterLoadPosition"
                 }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.0
+                }
               }
             ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "amp3"
           }
         },
         {
@@ -114,6 +99,12 @@
                 "type": "named",
                 "data": {
                   "name": "shootNote"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 4.0
                 }
               }
             ]

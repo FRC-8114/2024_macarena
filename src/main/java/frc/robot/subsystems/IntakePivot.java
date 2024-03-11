@@ -39,7 +39,7 @@ public class IntakePivot extends SubsystemBase {
     private final RelativeEncoder intakePivotEncoder = intakePivot.getEncoder();
     private final SparkPIDController intakePivotController = intakePivot.getPIDController();
 
-    private final TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(12, 12);
+    private final TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(7, 8);
     private final ProfiledPIDController controller = new ProfiledPIDController(kP, kI, kD, constraints, kDt);
     private final ArmFeedforward feedforward = new ArmFeedforward(kS, kG, kV);
 
@@ -70,7 +70,7 @@ public class IntakePivot extends SubsystemBase {
     }
 
     public Command intakeDown() {
-        return setAngleCommand(0.39365264773368835).until(() -> intakePivotEncoder.getPosition() > 0.3765264773368835).andThen(stopMotor());
+        return setAngleCommand(0.39365264773368835).until(() -> intakePivotEncoder.getPosition() > 0.3655264773368835).andThen(stopMotor());
     }
 
     public Command intakeAmp() {
@@ -78,11 +78,15 @@ public class IntakePivot extends SubsystemBase {
     }
 
     public Command intakeWeUp() {
-        return setAngleCommand(0).until(() -> intakePivotEncoder.getPosition() < 0.0075).andThen(stopMotor());
+        return setAngleCommand(0).until(() -> intakePivotEncoder.getPosition() < 0.015).andThen(stopMotor());
     }
 
     public Command resetAngle() {
         return runOnce(() -> intakePivotEncoder.setPosition(0.0));
+    }
+
+    public void resetAngl() {
+        intakePivotEncoder.setPosition(0.0);
     }
 
     public Command stopMotor() {

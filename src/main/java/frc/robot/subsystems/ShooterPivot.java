@@ -1,181 +1,201 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.MutableMeasure.mutable;
-import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.Constants.ShooterRotationConstants.*;
+import static frc.robot.Constants.ShooterPivotConstants.*;
 
 import java.util.Map;
 
 import org.photonvision.PhotonUtils;
 
-import com.revrobotics.CANSparkBase.IdleMode;
-import com.revrobotics.CANSparkLowLevel.MotorType;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.RobotContainer;
-
+import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
-import com.revrobotics.CANSparkMax;
 
-import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.GenericEntry;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.MutableMeasure;
-import edu.wpi.first.units.Velocity;
-import edu.wpi.first.units.Voltage;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotContainer;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 
-public class ShooterPivot implements Subsystem {
+public class ShooterPivot extends SubsystemBase {
     private InterpolatingDoubleTreeMap angleMap = new InterpolatingDoubleTreeMap();
-    
-    private final CANSparkMax shooterPivot = new CANSparkMax(shooterPivotID, MotorType.kBrushless);
+    private final TalonFX shooterPivot = new TalonFX(shooterPivotID, "canivore");
     private final CANcoder shooterPivotEncoder = new CANcoder(4, "canivore");
+    private final PositionVoltage pos = new PositionVoltage(0, 0, false, 0, 0, false, false, false);
+    private final TrapezoidProfile profile = new TrapezoidProfile(
+        new TrapezoidProfile.Constraints(kMaxVelocity, kMaxAcceleration)
+    );
+    
+    private MotorOutputConfigs talonMotorConfig() {
+        MotorOutputConfigs mfg = new MotorOutputConfigs();
+        mfg.NeutralMode = NeutralModeValue.Brake;
+        mfg.Inverted = InvertedValue.Clockwise_Positive;
+        return mfg;
+    }
 
-    private final TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(5, 4);
-    private final ProfiledPIDController controller = new ProfiledPIDController(kP, kI, kD, constraints, kDt);
-    private final ArmFeedforward feedforward = new ArmFeedforward(kS, kG, kV);
-    private GenericEntry shootAngle = Shuffleboard.getTab("FieldInfo").add("Shooter Angle", 0.0).withWidget(BuiltInWidgets.kNumberSlider).withProperties(Map.of("min", 0, "max", 65)).getEntry();
+    private TalonFXConfiguration fusedTalonConfig(int cancoderID) {
+        TalonFXConfiguration talon_cfg = new TalonFXConfiguration();
+
+        FeedbackConfigs fuse_talon = talon_cfg.Feedback;
+        fuse_talon.FeedbackRemoteSensorID = cancoderID;
+        fuse_talon.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        fuse_talon.RotorToSensorRatio = gearRatio;
+        fuse_talon.SensorToMechanismRatio = 1.0;
+
+        Slot0Configs slot0 = talon_cfg.Slot0;
+        slot0.GravityType = GravityTypeValue.Arm_Cosine;
+        slot0.kP = kP; slot0.kI = kI; slot0.kD = kD;
+        slot0.kV = kV; slot0.kS = kS; slot0.kG = kG;
+        return talon_cfg;
+    }
+
+    private MagnetSensorConfigs encoderConfig() {
+        MagnetSensorConfigs encoder_cfg = new MagnetSensorConfigs();
+        encoder_cfg.SensorDirection = SensorDirectionValue.Clockwise_Positive;
+        encoder_cfg.MagnetOffset = encoderMagnentOffset;
+        return encoder_cfg;
+    }
+
+    private void generateAngleMap() {
+        double[][] angles = {
+            {16+38.5,     58.99},
+            {16+12+38.5,  52.77},
+            {16+24+38.5,  47.89},
+            {16+36+38.5,  45.67},
+            {16+48+38.5,  42.58},
+            {16+60+38.5,  41.00},
+            {16+72+38.5,  38.70},
+            {16+84+38.5,  38.075},
+            {16+96+38.5,  37.00},
+            {16+108+38.5, 35.59},
+        };
+        
+        for (double[] pair: angles) {
+            angleMap.put(Units.inchesToMeters(pair[0]), pair[1]);
+        };
+    }
     
     public ShooterPivot() {
-        shooterPivot.setIdleMode(IdleMode.kBrake);
-        shooterPivotEncoder.getConfigurator().apply(new MagnetSensorConfigs().withSensorDirection(SensorDirectionValue.Clockwise_Positive).withMagnetOffset(0.096923828125));
-        controller.setTolerance(Units.degreesToRotations(4));
-        // TODO: Generate test data
-        angleMap.put(Units.inchesToMeters(16+38.5), 58.99);
-        angleMap.put(Units.inchesToMeters(16+12+38.5), 51.77);
-        angleMap.put(Units.inchesToMeters(16+24+38.5), 46.89);
-        angleMap.put(Units.inchesToMeters(16+36+38.5), 44.67);
-        angleMap.put(Units.inchesToMeters(16+48+38.5), 41.78);
-        angleMap.put(Units.inchesToMeters(16+60+38.5), 40.00);
-        angleMap.put(Units.inchesToMeters(16+72+38.5), 37.90);
-        angleMap.put(Units.inchesToMeters(16+84+38.5), 37.275);
-        angleMap.put(Units.inchesToMeters(16+96+38.5), 36.00);
-        angleMap.put(Units.inchesToMeters(16+108+38.5), 34.89);
+        generateAngleMap();
 
+        // Apply all of the configurations
+        shooterPivotEncoder.getConfigurator().apply(encoderConfig());
+        shooterPivot.getConfigurator().apply(fusedTalonConfig(shooterPivotEncoder.getDeviceID()));
+        shooterPivot.getConfigurator().apply(talonMotorConfig());
     }
-
+    
     public double getAngle() {
-        return shooterPivot.getEncoder().getPosition();
+        return shooterPivot.getPosition().getValueAsDouble();
     }
 
-    public boolean atSetpoint() {
-        return controller.atSetpoint();
-    }
+    public Command setAngle(double goal) {
+        TrapezoidProfile.State m_goal = new TrapezoidProfile.State(goal, 0);
+        TrapezoidProfile.State curPoint = new TrapezoidProfile.State(getAngle(), shooterPivot.getVelocity().getValueAsDouble());
+        goalPose = goal;
 
-    public Command setAngleCommand(double goal) {
         return run(() -> {
-            // System.out.println(-(controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), goal))
-            //         + " | " + -(feedforward.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), controller.getSetpoint().velocity)) + " | " + shootAngle.getDouble(0.0) + " | " + goal);
-            shooterPivot.setVoltage((controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), Units.degreesToRotations(goal))
-                    + feedforward.calculate(Units.rotationsToRadians(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble()), controller.getSetpoint().velocity)));
+            TrapezoidProfile.State calc = profile.calculate(0.020, curPoint, m_goal);
+            shooterPivot.setControl(
+                pos.withPosition(calc.position).withVelocity(calc.velocity)
+            );
         });
     }
+
+    private GenericEntry shuffleAngle = Shuffleboard.getTab("FieldInfo")
+        .add("Shooter Angle", 0.0)
+        .withWidget(BuiltInWidgets.kNumberSlider)
+        .withProperties(Map.of(
+            "min", 0,
+            "max", kMaxRotation
+        ))
+        .getEntry();
 
     public Command setAngleFromShuffle() {
         Shuffleboard.update();
-        return run(() -> {
-            // System.out.println((controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), Units.degreesToRotations(shootAngle.getDouble(0.0))))
-            //         + " | " + (feedforward.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), controller.getSetpoint().velocity)) + " | " + Units.degreesToRotations(shootAngle.getDouble(0.0)));
-            // System.out.println("" + Units.degreesToRotations(shootAngle.getDouble(0.0)));
-            shooterPivot.setVoltage((controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), Units.degreesToRotations(shootAngle.getDouble(0.0)))
-                    + feedforward.calculate(Units.rotationsToRadians(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble()), controller.getSetpoint().velocity)));
-        });
+        return setAngle(Units.degreesToRotations(shuffleAngle.getDouble(0)));
     }
-
-    public Command setAutoAngleCommand(Pose3d goalPose3d) {
-        return run(() -> {
-            // System.out.println(-(controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), goal))
-            //         + " | " + -(feedforward.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), controller.getSetpoint().velocity)) + " | " + shootAngle.getDouble(0.0) + " | " + goal);
-            shooterPivot.setVoltage((controller.calculate(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble(), Units.degreesToRotations(getShotAngle(goalPose3d)))
-                    + feedforward.calculate(Units.rotationsToRadians(shooterPivotEncoder.getAbsolutePosition().getValueAsDouble()), controller.getSetpoint().velocity)));
-        });
-    }
-
-    public Command stopMotors() {
-        return runOnce(() -> shooterPivot.setVoltage(0));
-    }
-
-    public Command autoAngle(double distance) {
-        return setAngleCommand(angleMap.get(distance));
-    }
-
-    public Command autoAngleFromPose(Pose3d goalPose) {
-        return setAutoAngleCommand(goalPose);
-    }
-
+    
     public double getShotAngle(Pose3d goalPose) {
         return angleMap.get(PhotonUtils.getDistanceToPose(RobotContainer.drivetrain.getState().Pose, goalPose.toPose2d()));
     }
 
-    public Command printEncoder(Pose2d currentPose, Pose3d goalPose) {
-        return run(() -> System.out.println(angleMap.get(PhotonUtils.getDistanceToPose(currentPose, goalPose.toPose2d())) + " | " + PhotonUtils.getDistanceToPose(currentPose, goalPose.toPose2d()))).ignoringDisable(true);
-        // return run(() -> SmartDashboard.putNumber("Shooter Pivot Position", shooterPivotEncoder.getPosition().getValueAsDouble()));
+    public Command autoAngle(Pose3d goalPose3d) {
+        return setAngle(Units.degreesToRotations(getShotAngle(goalPose3d)));
     }
 
-    // SysID
-    private final MutableMeasure<Voltage> appliedVoltage = mutable(Volts.of(0));
-    // Mutable holder for unit-safe linear distance values, persisted to avoid reallocation.
-    private final MutableMeasure<Angle> distance = mutable(Rotations.of(0));
-    // Mutable holder for unit-safe linear velocity values, persisted to avoid reallocation.
-    private final MutableMeasure<Velocity<Angle>> velocity = mutable(RotationsPerSecond.of(0));
-
-    public void consumeSysIdVoltage(Measure<Voltage> voltage) {
-        shooterPivot.setVoltage(voltage.in(Volts));
+    public Command stopMotors() {
+        return runOnce(() -> shooterPivot.set(0));
     }
 
-    private void consumeSysIdLog(SysIdRoutineLog log) {
-        log.motor("Shooter Pivot")
-            .voltage(
-                appliedVoltage.mut_replace(
-                    shooterPivot.getAppliedOutput() * shooterPivot.getBusVoltage(), Volts))
-            .angularPosition(distance.mut_replace(shooterPivotEncoder.getPosition().getValueAsDouble(), Rotations))
-            .angularVelocity(
-                velocity.mut_replace(shooterPivotEncoder.getVelocity().getValueAsDouble(), RotationsPerSecond));
+    double goalPose = 0.0;
+    double tolerance = Units.degreesToRotations(2.0);
+    public boolean atSetpoint() {
+        return (goalPose - tolerance < getAngle() && getAngle()  < goalPose + tolerance);
     }
 
-    SysIdRoutine routine = new SysIdRoutine(
-        new SysIdRoutine.Config(Volts.of(0.5).per(Seconds), Volts.of(2), null),
-        new SysIdRoutine.Mechanism(
-            this::consumeSysIdVoltage, // Set voltage method
-            this::consumeSysIdLog, // Log function
-            this
-        )
-    );
+    // public Command printEncoder(Pose2d currentPose, Pose3d goalPose) {
+    // }
 
-    private double upper_bound = Units.degreesToRotations(60);
-    private double lower_bound = Units.degreesToRotations(0);
+    // // SysID
+    // private final MutableMeasure<Voltage> appliedVoltage = mutable(Volts.of(0));
+    // // Mutable holder for unit-safe linear distance values, persisted to avoid reallocation.
+    // private final MutableMeasure<Angle> distance = mutable(Rotations.of(0));
+    // // Mutable holder for unit-safe linear velocity values, persisted to avoid reallocation.
+    // private final MutableMeasure<Velocity<Angle>> velocity = mutable(RotationsPerSecond.of(0));
 
-    public Command sysIdQuasistaticForward() {
-        return routine.quasistatic(Direction.kForward).until(() -> (shooterPivotEncoder.getPosition().getValueAsDouble() <= lower_bound)).andThen(stopMotors());
-    }
+    // public void consumeSysIdVoltage(Measure<Voltage> voltage) {
+    //     shooterPivot.setVoltage(voltage.in(Volts));
+    // }
 
-    public Command sysIdQuasistaticReverse() {
-        return routine.quasistatic(Direction.kReverse).until(() -> (shooterPivotEncoder.getPosition().getValueAsDouble() >= upper_bound)).andThen(stopMotors());
-    }
+    // private void consumeSysIdLog(SysIdRoutineLog log) {
+    //     log.motor("Shooter Pivot")
+    //         .voltage(
+    //             appliedVoltage.mut_replace(
+    //                 shooterPivot.getAppliedOutput() * shooterPivot.getBusVoltage(), Volts))
+    //         .angularPosition(distance.mut_replace(shooterPivotEncoder.getPosition().getValueAsDouble(), Rotations))
+    //         .angularVelocity(
+    //             velocity.mut_replace(shooterPivotEncoder.getVelocity().getValueAsDouble(), RotationsPerSecond));
+    // }
 
-    public Command sysIdDynamicForward() {
-        return routine.dynamic(Direction.kForward).until(() -> (shooterPivotEncoder.getPosition().getValueAsDouble() <= lower_bound)).andThen(stopMotors());
-    }
+    // SysIdRoutine routine = new SysIdRoutine(
+    //     new SysIdRoutine.Config(Volts.of(0.5).per(Seconds), Volts.of(2), null),
+    //     new SysIdRoutine.Mechanism(
+    //         this::consumeSysIdVoltage, // Set voltage method
+    //         this::consumeSysIdLog, // Log function
+    //         this
+    //     )
+    // );
 
-    public Command sysIdDynamicReverse() {
-        return routine.dynamic(Direction.kReverse).until(() -> (shooterPivotEncoder.getPosition().getValueAsDouble() >= upper_bound)).andThen(stopMotors());
-    }
+    // private double upper_bound = Units.degreesToRotations(60);
+    // private double lower_bound = Units.degreesToRotations(0);
+
+    // public Command sysIdQuasistaticForward() {
+    //     return routine.quasistatic(Direction.kForward).until(() -> (shooterPivotEncoder.getPosition().getValueAsDouble() <= lower_bound)).andThen(stopMotors());
+    // }
+
+    // public Command sysIdQuasistaticReverse() {
+    //     return routine.quasistatic(Direction.kReverse).until(() -> (shooterPivotEncoder.getPosition().getValueAsDouble() >= upper_bound)).andThen(stopMotors());
+    // }
+
+    // public Command sysIdDynamicForward() {
+    //     return routine.dynamic(Direction.kForward).until(() -> (shooterPivotEncoder.getPosition().getValueAsDouble() <= lower_bound)).andThen(stopMotors());
+    // }
+
+    // public Command sysIdDynamicReverse() {
+    //     return routine.dynamic(Direction.kReverse).until(() -> (shooterPivotEncoder.getPosition().getValueAsDouble() >= upper_bound)).andThen(stopMotors());
+    // }
 }

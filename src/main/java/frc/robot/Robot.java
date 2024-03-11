@@ -9,6 +9,8 @@ import java.util.Map;
 import org.littletonrobotics.urcl.URCL;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
+import com.ctre.phoenix6.SignalLogger;
+
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -42,6 +44,8 @@ public class Robot extends TimedRobot {
     Shuffleboard.update();
     Shuffleboard.getTab("FieldInfo").add("Field2d", field).withWidget("Field");
 
+    SignalLogger.stop();
+    SignalLogger.enableAutoLogging(false);
     // DataLogManager.start();
     // URCL.start();
   }
@@ -75,6 +79,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
+    usingTags = false;
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
     if (m_autonomousCommand != null) {
@@ -95,7 +100,9 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+    usingTags = true;
     m_robotContainer.configureBindings();
+    SignalLogger.stop();
     //m_robotContainer.drivetrain.seedFieldRelative(new Pose2d(14.72234058380127, 7.769551753997803, new Rotation2d(1.5707963267948966)));
   }
 
