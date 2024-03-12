@@ -4,13 +4,8 @@ import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-
 import com.revrobotics.CANSparkMax;
 
 import static frc.robot.Constants.IntakeConstants.*;
@@ -22,9 +17,6 @@ public class IntakeRollers extends SubsystemBase {
         MotorType.kBrushless
     );
     final DigitalInput limSwitch = new DigitalInput(limSwitchDIO);
-
-    private boolean noteIntaked = false;
-    private Timer currentHit = new Timer();
 
     public IntakeRollers() {
         intakeRollers.setIdleMode(IdleMode.kBrake);
@@ -56,12 +48,4 @@ public class IntakeRollers extends SubsystemBase {
     public Command printLim() {
         return runOnce(() -> System.out.println("" + limSwitch.get()));
     }
-
-    @Override
-    public void periodic()
-    {
-        
-        // SmartDashboard.putNumber("Intake CUrrent", intakeRollers.getOutputCurrent());
-    }
-
 }

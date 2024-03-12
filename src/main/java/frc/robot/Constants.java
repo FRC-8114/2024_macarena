@@ -1,7 +1,5 @@
 package frc.robot;
 
-import edu.wpi.first.units.Units;
-
 public class Constants {
     public static final class IntakeConstants {
         public static final int intakePivotID = 51;
@@ -17,8 +15,8 @@ public class Constants {
         public static double kV = 0.58;
         public static double kDt = 0.02;
     
-        public static double kMaxVelocity = 1.75;
-        public static double kMaxAcceleration = 0.75;
+        public static double kMaxVelocity = 7;
+        public static double kMaxAcceleration = 8;
     };
 
     public static final class ShooterPivotConstants {
@@ -36,6 +34,8 @@ public class Constants {
 
         public static double kMaxVelocity = 1.75;
         public static double kMaxAcceleration = 0.75;
+
+        public static double kMinRotation = 0; // IN DEGREES
         public static double kMaxRotation = 65; // IN DEGREES
 
         public static double gearRatio = 100.0;
@@ -44,19 +44,32 @@ public class Constants {
     }
 
     public static final class ShooterFlywheelConstants {
-
-        public static final double shooterRPM = 4000;
-
         public static final int shooterFlywheelLeftID = 9;
         public static final int shooterFlywheelRightID = 10;
 
-        public static double kP = 2.4206;
-        public static double kI = 0.0;
-        public static double kD = 0.05;
+        public static final class Fast {
+            public static final double shooterRPM = 4000;
+            public static final double shooterAcceleration = 70;
+           
+            public static double kP = 2.4206;
+            public static double kI = 0.0;
+            public static double kD = 0.05;
+    
+            public static double kS = 0.12517;
+            public static double kV = 0.12235;
+            public static double kA = 0.010447;
+        }
+        
+        public static final class Slow {
+            public static final double shooterRPM = 240;
+            public static final double shooterAcceleration = 4;
 
-        public static double kS = 0.12517;
-        public static double kV = 0.12235;
-        public static double kA = 0.010447;
+            public static double kP = 30;
+            public static double kI = 0.2;
+            public static double kD = 9;
+
+            public static double kS = 0.2;
+        }
     }
 
     public static final class TelescopeConstants {

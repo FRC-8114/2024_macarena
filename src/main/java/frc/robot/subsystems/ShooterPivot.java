@@ -40,14 +40,14 @@ public class ShooterPivot extends SubsystemBase {
         new TrapezoidProfile.Constraints(kMaxVelocity, kMaxAcceleration)
     );
     
-    private MotorOutputConfigs talonMotorConfig() {
+    private MotorOutputConfigs talonMfg() {
         MotorOutputConfigs mfg = new MotorOutputConfigs();
         mfg.NeutralMode = NeutralModeValue.Brake;
         mfg.Inverted = InvertedValue.Clockwise_Positive;
         return mfg;
     }
 
-    private TalonFXConfiguration fusedTalonConfig(int cancoderID) {
+    private TalonFXConfiguration talonCfg(int cancoderID) {
         TalonFXConfiguration talon_cfg = new TalonFXConfiguration();
 
         FeedbackConfigs fuse_talon = talon_cfg.Feedback;
@@ -63,7 +63,7 @@ public class ShooterPivot extends SubsystemBase {
         return talon_cfg;
     }
 
-    private MagnetSensorConfigs encoderConfig() {
+    private MagnetSensorConfigs encoderCfg() {
         MagnetSensorConfigs encoder_cfg = new MagnetSensorConfigs();
         encoder_cfg.SensorDirection = SensorDirectionValue.Clockwise_Positive;
         encoder_cfg.MagnetOffset = encoderMagnentOffset;
@@ -91,11 +91,9 @@ public class ShooterPivot extends SubsystemBase {
     
     public ShooterPivot() {
         generateAngleMap();
-
-        // Apply all of the configurations
-        shooterPivotEncoder.getConfigurator().apply(encoderConfig());
-        shooterPivot.getConfigurator().apply(fusedTalonConfig(shooterPivotEncoder.getDeviceID()));
-        shooterPivot.getConfigurator().apply(talonMotorConfig());
+        shooterPivotEncoder.getConfigurator().apply(encoderCfg());
+        shooterPivot.getConfigurator().apply(talonCfg(shooterPivotEncoder.getDeviceID()));
+        shooterPivot.getConfigurator().apply(talonMfg());
     }
     
     public double getAngle() {
@@ -105,7 +103,7 @@ public class ShooterPivot extends SubsystemBase {
     public Command setAngle(double goal) {
         TrapezoidProfile.State m_goal = new TrapezoidProfile.State(goal, 0);
         TrapezoidProfile.State curPoint = new TrapezoidProfile.State(getAngle(), shooterPivot.getVelocity().getValueAsDouble());
-        goalPose = goal;
+        
 
         return run(() -> {
             TrapezoidProfile.State calc = profile.calculate(0.020, curPoint, m_goal);
@@ -119,7 +117,7 @@ public class ShooterPivot extends SubsystemBase {
         .add("Shooter Angle", 0.0)
         .withWidget(BuiltInWidgets.kNumberSlider)
         .withProperties(Map.of(
-            "min", 0,
+            "min", kMinRotation,
             "max", kMaxRotation
         ))
         .getEntry();
@@ -141,10 +139,9 @@ public class ShooterPivot extends SubsystemBase {
         return runOnce(() -> shooterPivot.set(0));
     }
 
-    double goalPose = 0.0;
     double tolerance = Units.degreesToRotations(2.0);
     public boolean atSetpoint() {
-        return (goalPose - tolerance < getAngle() && getAngle()  < goalPose + tolerance);
+        return Math.abs(shooterPivot.getClosedLoopError().getValue()) < tolerance;
     }
 
     // public Command printEncoder(Pose2d currentPose, Pose3d goalPose) {

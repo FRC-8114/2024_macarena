@@ -1,68 +1,50 @@
 package frc.robot.subsystems;
 
+import static frc.robot.Constants.IntakeConstants.*;
+
+import java.util.function.BooleanSupplier;
+
+import com.revrobotics.CANSparkBase.IdleMode;
+import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
+
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.MutableMeasure;
-import edu.wpi.first.units.Velocity;
-import edu.wpi.first.units.Voltage;
-
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
-
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
-import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.Volts;
-import static edu.wpi.first.units.MutableMeasure.mutable;
-
-import com.revrobotics.CANSparkLowLevel.MotorType;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkPIDController;
-import com.revrobotics.CANSparkBase.IdleMode;
-
-import static frc.robot.Constants.IntakeConstants.*;
 
 public class IntakePivot extends SubsystemBase {
     private final CANSparkMax intakePivot = new CANSparkMax(intakePivotID, MotorType.kBrushless);
     //private final Encoder intakePivotEncoder = new Encoder(8, 9);
     private final RelativeEncoder intakePivotEncoder = intakePivot.getEncoder();
-    private final SparkPIDController intakePivotController = intakePivot.getPIDController();
-
-    private final TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(7, 8);
+    private final TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(kMaxVelocity, kMaxAcceleration);
     private final ProfiledPIDController controller = new ProfiledPIDController(kP, kI, kD, constraints, kDt);
     private final ArmFeedforward feedforward = new ArmFeedforward(kS, kG, kV);
 
     public IntakePivot() {
         intakePivot.setIdleMode(IdleMode.kBrake);
-        // intakePivotEncoder.setDistancePerPulse(1.0);
-        // intakePivotEncoder.setMinRate(1);
-        // intakePivotEncoder.setSamplesToAverage(5);
         intakePivotEncoder.setPosition(0);
         intakePivotEncoder.setPositionConversionFactor(1.0/30.0);
-        // intakePivotController.setFeedbackDevice(intakePivotEncoder);
-        // intakePivotController.
+        controller.setTolerance(Units.degreesToRotations(2.0));
     }
 
     public double getAngle() {
         return intakePivotEncoder.getPosition();
     }
 
-    public Command setAngleCommand(double goal) {
+    public Command setAngle(double goal) {
         return run(() -> {
-            intakePivot.setVoltage(controller.calculate(intakePivotEncoder.getPosition(), goal)
-                    + feedforward.calculate(Units.rotationsToRadians(intakePivotEncoder.getPosition()), controller.getSetpoint().velocity));
+            double curPose = Units.rotationsToRadians(intakePivotEncoder.getPosition());
+            double ff = feedforward.calculate(curPose, controller.getSetpoint().velocity);
+            intakePivot.setVoltage(controller.calculate(intakePivotEncoder.getPosition(), goal) + ff);
         });
+    }
+
+    public BooleanSupplier atSetpoint() {
+        return () -> controller.atSetpoint() || intakePivot.getOutputCurrent() > 70;
     }
 
     public Command intakeSetVoltage(double voltage) {
@@ -70,23 +52,25 @@ public class IntakePivot extends SubsystemBase {
     }
 
     public Command intakeDown() {
-        return setAngleCommand(0.39365264773368835).until(() -> intakePivotEncoder.getPosition() > 0.3655264773368835).andThen(stopMotor());
+        return setAngle(0.39365264773368835)
+            .until(atSetpoint())
+            .andThen(stopMotor());
     }
 
     public Command intakeAmp() {
-        return setAngleCommand(0.17).until(() -> intakePivotEncoder.getPosition() > 0.16).andThen(stopMotor());
+        return setAngle(0.17)
+            .until(atSetpoint())
+            .andThen(stopMotor());
     }
 
-    public Command intakeWeUp() {
-        return setAngleCommand(0).until(() -> intakePivotEncoder.getPosition() < 0.015).andThen(stopMotor());
+    public Command intakeUp() {
+        return setAngle(0)
+            .until(atSetpoint())
+            .andThen(stopMotor());
     }
 
     public Command resetAngle() {
         return runOnce(() -> intakePivotEncoder.setPosition(0.0));
-    }
-
-    public void resetAngl() {
-        intakePivotEncoder.setPosition(0.0);
     }
 
     public Command stopMotor() {
@@ -96,11 +80,6 @@ public class IntakePivot extends SubsystemBase {
     public Command printEncoder() {
         return run(() -> System.out.println(intakePivotEncoder.getPosition()));
     }
-
-    // @Override
-    // public void periodic() {
-
-    // }
 
     // // SysID
     // private final MutableMeasure<Voltage> appliedVoltage = mutable(Volts.of(0));

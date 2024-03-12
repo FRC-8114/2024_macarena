@@ -1,7 +1,5 @@
 package frc.robot;
 
-import java.util.Optional;
-
 import org.photonvision.PhotonUtils;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
@@ -16,7 +14,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -67,23 +64,27 @@ public class RobotContainer {
   private launchtrigger[][] button = new launchtrigger[8][8];
   private double turtleMode = 1.0;
 
-  DriverStation.Alliance ally = DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : DriverStation.Alliance.Blue;
+  private DriverStation.Alliance ally() {
+    return DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : DriverStation.Alliance.Red;
+  }
 
   public void configureBindings() {
     // Drive Controls (Flip depending on alliance)
-    switch (ally) {
-      case Blue:
+    switch (ally()) {
+      case Blue: {
         drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
         drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed * turtleMode) // Drive with negative Y (forward)
           .withVelocityY(-joystick.getLeftX() * MaxSpeed * turtleMode) // Drive left with negative X (left)
           .withRotationalRate(-joystick.getRightX() * MaxAngularRate * turtleMode) // Drive counterclockwise with negative X (left)
-        ));
-      case Red:
+        )); 
+      }
+      case Red: {
         drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
         drivetrain.applyRequest(() -> drive.withVelocityX(joystick.getLeftY() * MaxSpeed * turtleMode) // Drive with negative Y (forward)
           .withVelocityY(joystick.getLeftX() * MaxSpeed * turtleMode) // Drive left with positive X (left)
           .withRotationalRate(-joystick.getRightX() * MaxAngularRate * turtleMode) // Drive counterclockwise with positive X (left)
         ));
+      }
     }
 
     // == Xbox Controller ==
@@ -106,7 +107,7 @@ public class RobotContainer {
     joystick.rightBumper().onTrue(telescope.setSpeedCommand(7)).onFalse(telescope.setSpeedCommand(0));
     joystick.leftBumper().onTrue(telescope.setSpeedCommand(-5)).onFalse(telescope.setSpeedCommand(-1));
 
-    joystick.leftTrigger().onTrue(intakePivot.intakeWeUp()).whileTrue(shooterPivot.setAngle(37));
+    joystick.leftTrigger().onTrue(intakePivot.intakeUp()).whileTrue(shooterPivot.setAngle(37));
     joystick.povDown().onTrue(Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote())).whileTrue(shooterPivot.setAngle(37));
     joystick.povRight().whileTrue(shooterAngle());
     joystick.rightTrigger().onTrue(this.shotSequence());
@@ -123,17 +124,14 @@ public class RobotContainer {
     button[3][1].onTrue(shooterFlywheel.stopFlywheels());
     button[2][1].onTrue(shooterFlywheel.startFlywheels()); // Start Flywheels // Stop Flywheels
     button[0][2].onTrue(Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote())).whileTrue(shooterPivot.setAngle(37));   // Set Intake Angle to Position to intake note and intake note
-    button[1][2].onTrue(Commands.parallel(intakeRollers.intakeStop(), intakePivot.intakeWeUp())).whileTrue(shooterPivot.setAngle(37));   // Set Intake Angle to position to feed note to shooter
+    button[1][2].onTrue(Commands.parallel(intakeRollers.intakeStop(), intakePivot.intakeUp())).whileTrue(shooterPivot.setAngle(37));   // Set Intake Angle to position to feed note to shooter
     button[3][2].onTrue(intakeRollers.outtakeNote()); // Outake
     button[2][2].onTrue(this.shotSequence());
     button[4][2].onTrue(intakeRollers.slowOuttakeNote());
     button[5][2].onTrue(intakePivot.intakeSetVoltage(-4)).onFalse(intakePivot.stopMotor());
-
     button[0][5].onTrue(shooterPivot.setAngleFromShuffle()); // Shuffle Angler
-
     button[3][0].onTrue(intakePivot.resetAngle());
     button[3][3].whileTrue(shooterPivot.setAngle(37)).onTrue(Commands.sequence(intakePivot.intakeAmp(), intakeRollers.slowOuttakeNote()));
-
     button[0][6].onTrue(winch.setSpeedCommand(3)).onFalse(winch.setSpeedCommand(0));
     button[1][6].onTrue(winch.setSpeedCommand(-3)).onFalse(winch.setSpeedCommand(0));
 
@@ -143,23 +141,16 @@ public class RobotContainer {
     button[0][3].whileTrue(shooterPivot.setAngle(37));
     button[0][4].whileTrue(shooterPivot.setAngleFromShuffle());
 
+    switch (ally()) {
+      case Blue: button[2][4].whileTrue(drivetrain.applyRequest(() -> angleDrive.withVelocityX(-joystick.getLeftY() * MaxSpeed * turtleMode).withVelocityY(-joystick.getLeftX() * MaxSpeed * turtleMode).withTargetDirection(this.getDriveAngle(7))));
+      case Red:  button[2][4].whileTrue(drivetrain.applyRequest(() -> angleDrive.withVelocityX(joystick.getLeftY() * MaxSpeed * turtleMode).withVelocityY(joystick.getLeftX() * MaxSpeed * turtleMode).withTargetDirection(this.getDriveAngle(4))));
+    }
+
     // SysID
     // joystick.povUp().and(joystick.a()).onTrue(shooterFlywheel.sysIdQuasistatic(Direction.kForward));
     // joystick.povUp().and(joystick.b()).onTrue(shooterFlywheel.sysIdQuasistatic(Direction.kReverse));
     // joystick.x().whileTrue(trap.setVoltageCommand(-6)).onFalse(trap.setVoltageCommand(0));
     // joystick.y().whileTrue(trap.setVoltageCommand(6)).onFalse(trap.setVoltageCommand(0));
-
-    // shooterPivot.setDefaultCommand(
-    //   shooterPivot.setAngleFromShuffle()
-    // );
-
-    // joystick.leftTrigger().whileTrue(shooterFlywheel.startFlywheels()).onFalse(shooterFlywheel.stopFlywheels());
-    // joystick.povRight().onTrue(Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote()));
-    // joystick.povUp().onTrue(intakePivot.intakeWeUp());
-    // joystick.povDown().onTrue(intakeRollers.outtakeNote());
-    // joystick.povLeft().onTrue(shooterPivot.setAngleFromShuffle());
-
-    // joystick.rightTrigger().whileTrue(shooterFlywheel.setSpeedCommand(1)).onFalse(shooterFlywheel.stopFlywheels());
   }
 
   public RobotContainer() {
@@ -172,14 +163,14 @@ public class RobotContainer {
 
     NamedCommands.registerCommand("intake", intakePivot.intakeDown());
     NamedCommands.registerCommand("intakeRollIn", intakeRollers.intakeNote().withTimeout(2));
-    NamedCommands.registerCommand("intakeBack", intakePivot.intakeWeUp());
+    NamedCommands.registerCommand("intakeBack", intakePivot.intakeUp());
     NamedCommands.registerCommand("outtake", this.shotSequence());
     NamedCommands.registerCommand("quickShot", Commands.waitUntil(shooterPivot::atSetpoint).andThen(intakeRollers.outtakeNote().andThen(shooterFlywheel.stopFlywheels())));
     NamedCommands.registerCommand("shooterStart", this.shooterStart());
     NamedCommands.registerCommand("shooterStop", this.shooterStop());
-    NamedCommands.registerCommand("flywheelStart", shooterFlywheel.setSpeedNoStop(6300));
+    NamedCommands.registerCommand("flywheelStart", shooterFlywheel.setSpeed(6300));
     NamedCommands.registerCommand("shooterLoadPosition", shooterPivot.setAngle(37));
-    NamedCommands.registerCommand("feedNote", Commands.waitUntil(shooterPivot::atSetpoint).andThen(intakePivot.intakeWeUp()));
+    NamedCommands.registerCommand("feedNote", Commands.waitUntil(shooterPivot::atSetpoint).andThen(intakePivot.intakeUp()));
     NamedCommands.registerCommand("shooterAim", shooterAngle());
     NamedCommands.registerCommand("shootNote", Commands.waitUntil(shooterPivot::atSetpoint).andThen(this.shotSequence()));
     NamedCommands.registerCommand("startAim", shooterPivot.setAngle(57));
@@ -216,7 +207,7 @@ public class RobotContainer {
   }
 
   public Command lowBack() {
-    return Commands.parallel(intakePivot.intakeWeUp(), shooterPivot.setAngle(36)).withTimeout(1);
+    return Commands.parallel(intakePivot.intakeUp(), shooterPivot.setAngle(36)).withTimeout(1);
   }
 
   public Command shotSequence() {
@@ -230,7 +221,7 @@ public class RobotContainer {
   final AprilTagFieldLayout field = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
   
   public Command shooterAngle() {
-    switch (ally) {
+    switch (ally()) {
       case Red:  return shooterPivot.autoAngle(field.getTagPose(7).get());
       case Blue: return shooterPivot.autoAngle(field.getTagPose(4).get());
       default:   return shooterPivot.autoAngle(field.getTagPose(4).get());
@@ -241,12 +232,9 @@ public class RobotContainer {
     return PhotonUtils.getYawToPose(curPose(), field.getTagPose(4).get().toPose2d());
   }
 
-  public Command driveAngle() {
+  public Rotation2d getDriveAngle(int id) {
     System.out.println("" + PhotonUtils.getYawToPose(curPose(), field.getTagPose(4).get().toPose2d()));
-    return drivetrain.applyRequest(() -> angleDrive.withVelocityX(joystick.getLeftY() * MaxSpeed) // Drive with negative Y (forward)
-                  .withVelocityY(joystick.getLeftX() * MaxSpeed) // Drive left with positive X (left)
-                  .withTargetDirection(getShotAngle()) // Drive counterclockwise with positive X (left)
-              );
+    return PhotonUtils.getYawToPose(curPose(), field.getTagPose(id).get().toPose2d());
   }
 
   public Command moveToPose(Pose2d targetPose) {
@@ -286,7 +274,7 @@ public class RobotContainer {
     //     1.0 // Rotation delay distance in meters. This is how far the robot should travel
     //         // before attempting to rotate.
     // );
-    intakePivot.resetAngl();
+    intakePivot.resetAngle();
 
     //return Commands.parallel(pathTest, this.shooterAngle().asProxy());
     return auton.getSelected();

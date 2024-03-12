@@ -21,21 +21,20 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 public class ShooterFlywheel implements Subsystem {
     private final TalonFX shooterFlywheelLeft = new TalonFX(shooterFlywheelLeftID, "canivore");
     private final TalonFX shooterFlywheelRight = new TalonFX(shooterFlywheelRightID, "canivore");
-    private final VelocityVoltage mmConfig = new VelocityVoltage(shooterRPM / 60.0, 70, false, 0, 0, false, false, false);
-    private final VelocityVoltage slowConfig = new VelocityVoltage(4, 4, true, 0, 1, false, false, false);
-    private final GenericEntry shooteRPM = Shuffleboard.getTab("FieldInfo").add("Shooter Rpm", 1000).withWidget(BuiltInWidgets.kNumberSlider).withProperties(Map.of("min", 0, "max", 6000)).getEntry();
-
+    private final VelocityVoltage fastMMConfig = new VelocityVoltage(Fast.shooterRPM / 60.0, Fast.shooterAcceleration, false, 0, 0, false, false, false);
+    private final VelocityVoltage slowMMConfig = new VelocityVoltage(Slow.shooterRPM / 60.0, Slow.shooterAcceleration, true, 0, 1, false, false, false);
 
     private void configureMotors() {
         var mfg = new MotorOutputConfigs();
         mfg.NeutralMode = NeutralModeValue.Coast;
 
         var slot0 = new Slot0Configs();
-        slot0.kP = kP; slot0.kI = kI; slot0.kD = kD;
-        slot0.kV = kV; slot0.kS = kS; slot0.kA = kA;
+        slot0.kP = Fast.kP; slot0.kI = Fast.kI; slot0.kD = Fast.kD;
+        slot0.kV = Fast.kV; slot0.kS = Fast.kS; slot0.kA = Fast.kA;
 
         var slot1 = new Slot1Configs();
-        slot1.kP = 30; slot1.kI = 0.2; slot1.kD = 9; slot1.kS = 0.2;
+        slot1.kP = Slow.kP; slot1.kI = Slow.kI; slot1.kD = Slow.kD;
+        slot1.kS = Slow.kS;
 
         shooterFlywheelLeft.getConfigurator().apply(slot0);
         shooterFlywheelLeft.getConfigurator().apply(slot1);
@@ -52,16 +51,27 @@ public class ShooterFlywheel implements Subsystem {
         configureMotors();
     }
 
-    Boolean upToSpeed = false;
-
     public Command setSpeed(double speedRPM) {
         upToSpeed = false;
         return run(() -> {
-            // System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 +
-            // " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
-            shooterFlywheelLeft.setControl(mmConfig.withVelocity(speedRPM / 60));
-            shooterFlywheelRight.setControl(mmConfig.withVelocity((speedRPM) / 60));
-        }).until(() -> {
+            System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 + " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
+            shooterFlywheelLeft.setControl(fastMMConfig.withVelocity(speedRPM/60));
+            shooterFlywheelRight.setControl(fastMMConfig.withVelocity(speedRPM/60));
+        });
+    }
+
+    public Command slowFlywheels(double speedRPM) {
+        return run(() -> {
+            System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 + " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
+            shooterFlywheelLeft.setControl(slowMMConfig.withVelocity(speedRPM/60));
+            shooterFlywheelRight.setControl(slowMMConfig.withVelocity(speedRPM/60)); }
+        );
+    }
+    
+    Boolean upToSpeed = false;
+    public Command setSpeedWithStop(double speedRPM) {
+        upToSpeed = false;
+        return setSpeed(speedRPM).until(() -> {
             if (shooterFlywheelLeft.getVelocity().getValueAsDouble() * 60 > (6050)) {
                 upToSpeed = true;
             }
@@ -72,30 +82,21 @@ public class ShooterFlywheel implements Subsystem {
             return false;
         }).andThen(stopFlywheels());
     }
-
-    public Command slowFlywheels(double rpm) {
-        return run(() -> {
-            System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 + " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
-            shooterFlywheelLeft.setControl(slowConfig.withVelocity(rpm/60));
-            shooterFlywheelRight.setControl(slowConfig.withVelocity(rpm/60)); }
-        );
-    }
-
-    public Command setSpeedNoStop(double speedRPM) {
-        upToSpeed = false;
-        return run(() -> {
-            System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 + " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
-            shooterFlywheelLeft.setControl(mmConfig.withVelocity(speedRPM/60));
-            shooterFlywheelRight.setControl(mmConfig.withVelocity((speedRPM)/60));
-        });
-    }
-
     public Command startFlywheels() {
-        return setSpeed(6350);
-    };
+        return setSpeedWithStop(6350);
+    }
+
+    private final GenericEntry shuffleFlywheelRPM = Shuffleboard.getTab("FieldInfo")
+        .add("Shooter Rpm", 1000)
+        .withWidget(BuiltInWidgets.kNumberSlider)
+        .withProperties(Map.of(
+            "min", 0,
+            "max", 6000
+        ))
+        .getEntry();
 
     public Command setSpeedFromShuffle() {
-        return setSpeed(shooteRPM.getDouble(1000));
+        return setSpeedWithStop(shuffleFlywheelRPM.getDouble(1000));
     }
 
     public Command stopFlywheels() {
