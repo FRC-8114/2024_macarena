@@ -73,7 +73,8 @@ public class Constants {
     }
 
     public static final class TelescopeConstants {
-        public static int telescopeID = 59;
+        public static int telescopeIDLeft = 11;
+        public static int telescopeIDRight = 12;
     }
     
     public static final class WinchConstants {

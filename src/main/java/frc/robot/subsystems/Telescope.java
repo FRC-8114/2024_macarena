@@ -10,13 +10,17 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkBase.IdleMode;
 
 public class Telescope implements Subsystem {
-    private final CANSparkMax telescope = new CANSparkMax(telescopeID, MotorType.kBrushless);
+    private final CANSparkMax telescopeLeft = new CANSparkMax(telescopeIDLeft, MotorType.kBrushless);
+    private final CANSparkMax telescopeRight = new CANSparkMax(telescopeIDRight, MotorType.kBrushless);
 
     public Telescope() {
-        telescope.setIdleMode(IdleMode.kBrake);
+        telescopeRight.setIdleMode(IdleMode.kBrake);
+        telescopeLeft.setIdleMode(IdleMode.kBrake);
+
+        telescopeRight.follow(telescopeLeft);
     }
 
     public Command setSpeedCommand(double voltage) {
-        return runOnce(() -> telescope.setVoltage(voltage));
+        return runOnce(() -> telescopeLeft.setVoltage(voltage));
     }
 }
