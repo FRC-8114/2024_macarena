@@ -6,10 +6,8 @@ import java.util.Map;
 
 import org.photonvision.PhotonUtils;
 
-import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -20,10 +18,13 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -35,7 +36,7 @@ public class ShooterPivot extends SubsystemBase {
     private InterpolatingDoubleTreeMap angleMap = new InterpolatingDoubleTreeMap();
     private final TalonFX shooterPivot = new TalonFX(shooterPivotID, "canivore");
     private final CANcoder shooterPivotEncoder = new CANcoder(4, "canivore");
-    private final PositionVoltage pos = new PositionVoltage(0, 0, false, 0, 0, false, false, false);
+    private final PositionVoltage pos = new PositionVoltage(0, 0, true, 0, 0, false, false, false);
     private final TrapezoidProfile profile = new TrapezoidProfile(
         new TrapezoidProfile.Constraints(kMaxVelocity, kMaxAcceleration)
     );
@@ -43,23 +44,25 @@ public class ShooterPivot extends SubsystemBase {
     private MotorOutputConfigs talonMfg() {
         MotorOutputConfigs mfg = new MotorOutputConfigs();
         mfg.NeutralMode = NeutralModeValue.Brake;
-        mfg.Inverted = InvertedValue.Clockwise_Positive;
+        mfg.Inverted = InvertedValue.CounterClockwise_Positive;
         return mfg;
     }
 
-    private TalonFXConfiguration talonCfg(int cancoderID) {
+    private TalonFXConfiguration talonCfg(CANcoder cancoder) {
         TalonFXConfiguration talon_cfg = new TalonFXConfiguration();
 
-        FeedbackConfigs fuse_talon = talon_cfg.Feedback;
-        fuse_talon.FeedbackRemoteSensorID = cancoderID;
-        fuse_talon.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-        fuse_talon.RotorToSensorRatio = gearRatio;
-        fuse_talon.SensorToMechanismRatio = 1.0;
+        // FeedbackConfigs talon_cfg.Feedback = talon_cfg.Feedback;
+        talon_cfg.Feedback.FeedbackRemoteSensorID = cancoder.getDeviceID();
+        talon_cfg.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        talon_cfg.Feedback.RotorToSensorRatio = gearRatio;
+        talon_cfg.Feedback.SensorToMechanismRatio = 1.0;
+        talon_cfg.Voltage.PeakForwardVoltage = 12;
+        talon_cfg.Voltage.PeakReverseVoltage = -12;
 
-        Slot0Configs slot0 = talon_cfg.Slot0;
-        slot0.GravityType = GravityTypeValue.Arm_Cosine;
-        slot0.kP = kP; slot0.kI = kI; slot0.kD = kD;
-        slot0.kV = kV; slot0.kS = kS; slot0.kG = kG;
+        // talon_cfg.Slot0Configs talon_cfg.Slot0 = talon_cfg.talon_cfg.Slot0;
+        talon_cfg.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+        talon_cfg.Slot0.kP = kP; talon_cfg.Slot0.kI = kI; talon_cfg.Slot0.kD = kD;
+        talon_cfg.Slot0.kV = kV; talon_cfg.Slot0.kS = kS; talon_cfg.Slot0.kG = kG;
         return talon_cfg;
     }
 
@@ -71,28 +74,22 @@ public class ShooterPivot extends SubsystemBase {
     }
 
     private void generateAngleMap() {
-        double[][] angles = {
-            {16+38.5,     58.99},
-            {16+12+38.5,  52.77},
-            {16+24+38.5,  47.89},
-            {16+36+38.5,  45.67},
-            {16+48+38.5,  42.58},
-            {16+60+38.5,  41.00},
-            {16+72+38.5,  38.70},
-            {16+84+38.5,  38.075},
-            {16+96+38.5,  37.00},
-            {16+108+38.5, 35.59},
-        };
-        
-        for (double[] pair: angles) {
-            angleMap.put(Units.inchesToMeters(pair[0]), pair[1]);
-        };
+        angleMap.put(Units.inchesToMeters(16+38.5), 59.59);
+        angleMap.put(Units.inchesToMeters(16+12+38.5), 54.97);
+        angleMap.put(Units.inchesToMeters(16+24+38.5), 48.19);
+        angleMap.put(Units.inchesToMeters(16+36+38.5), 47.97);
+        angleMap.put(Units.inchesToMeters(16+48+38.5), 45.68);
+        angleMap.put(Units.inchesToMeters(16+60+38.5), 44.20);
+        angleMap.put(Units.inchesToMeters(16+72+38.5), 41.50);
+        angleMap.put(Units.inchesToMeters(16+84+38.5), 41.275);
+        angleMap.put(Units.inchesToMeters(16+96+38.5), 40.40);
+        angleMap.put(Units.inchesToMeters(16+108+38.5), 38.89);
     }
     
     public ShooterPivot() {
         generateAngleMap();
         shooterPivotEncoder.getConfigurator().apply(encoderCfg());
-        shooterPivot.getConfigurator().apply(talonCfg(shooterPivotEncoder.getDeviceID()));
+        shooterPivot.getConfigurator().apply(talonCfg(shooterPivotEncoder));
         shooterPivot.getConfigurator().apply(talonMfg());
     }
     
@@ -100,17 +97,57 @@ public class ShooterPivot extends SubsystemBase {
         return shooterPivot.getPosition().getValueAsDouble();
     }
 
-    public Command setAngle(double goal) {
-        TrapezoidProfile.State m_goal = new TrapezoidProfile.State(goal, 0);
-        TrapezoidProfile.State curPoint = new TrapezoidProfile.State(getAngle(), shooterPivot.getVelocity().getValueAsDouble());
-        
+    public Command setAngle(double goalAngle) {
+        // TrapezoidProfile.State m_goal = new TrapezoidProfile.State(Units.degreesToRotations(goalAngle), 0);
+        // TrapezoidProfile.State curPoint = new TrapezoidProfile.State(getAngle(), shooterPivot.getVelocity().getValueAsDouble());
+        // double start = Timer.getFPGATimestamp();
+        // System.out.println("Shooter Rotation Start");
 
         return run(() -> {
-            TrapezoidProfile.State calc = profile.calculate(0.020, curPoint, m_goal);
+            // TrapezoidProfile.State calc = profile.calculate(Timer.getFPGATimestamp()-start, curPoint, m_goal);
+            // System.out.println("Pos: " + Units.degreesToRotations(goalAngle) + " | CurPose: " + this.getAngle());
             shooterPivot.setControl(
-                pos.withPosition(calc.position).withVelocity(calc.velocity)
+                pos.withPosition(Units.degreesToRotations(goalAngle))
             );
         });
+    }
+
+    // public Command setAngleFromShuffle() {
+    //     Shuffleboard.update();
+    //     TrapezoidProfile.State m_goal = new TrapezoidProfile.State(Units.degreesToRotations(shuffleAngle.getDouble(0)), 0);
+    //     TrapezoidProfile.State curPoint = new TrapezoidProfile.State(getAngle(), shooterPivot.getVelocity().getValueAsDouble());
+    //     double start = Timer.getFPGATimestamp();
+    //     // System.out.println("Shooter Rotation Start");
+
+    //     return run(() -> {
+    //         TrapezoidProfile.State calc = profile.calculate(Timer.getFPGATimestamp()-start, curPoint, m_goal);
+    //         // System.out.println("Pos: " + calc.position + " | " + calc.velocity);
+    //         shooterPivot.setControl(
+    //             pos.withPosition(calc.position).withVelocity(calc.velocity)
+    //         );
+    //     });
+    // }
+    final AprilTagFieldLayout field = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+    Pose2d pose2d;
+    public Command setAngleFromPose() {
+        var dsAlliance = DriverStation.getAlliance();
+        pose2d = field.getTagPose(7).get().toPose2d();
+    // Drive Controls (Flip depending on alliance)
+        if (dsAlliance.isPresent()) {
+            if (dsAlliance.get() == DriverStation.Alliance.Blue) {
+                pose2d = field.getTagPose(7).get().toPose2d();
+            }
+            else if (dsAlliance.get() == DriverStation.Alliance.Red) {
+                pose2d = field.getTagPose(4).get().toPose2d();
+            }
+        }
+
+        return run(() -> {
+            // System.out.println("" + getShotAngle(goalPose) + " | " + PhotonUtils.getDistanceToPose(RobotContainer.drivetrain.getState().Pose, goalPose.toPose2d()));
+            double position = Units.degreesToRotations(angleMap.get(Math.abs(PhotonUtils.getDistanceToPose(RobotContainer.drivetrain.getState().Pose, pose2d))));
+            shooterPivot.setControl(pos.withPosition(position));
+        }
+        );
     }
 
     private GenericEntry shuffleAngle = Shuffleboard.getTab("FieldInfo")
@@ -124,24 +161,16 @@ public class ShooterPivot extends SubsystemBase {
 
     public Command setAngleFromShuffle() {
         Shuffleboard.update();
-        return setAngle(Units.degreesToRotations(shuffleAngle.getDouble(0)));
-    }
-    
-    public double getShotAngle(Pose3d goalPose) {
-        return angleMap.get(PhotonUtils.getDistanceToPose(RobotContainer.drivetrain.getState().Pose, goalPose.toPose2d()));
-    }
-
-    public Command autoAngle(Pose3d goalPose3d) {
-        return setAngle(Units.degreesToRotations(getShotAngle(goalPose3d)));
+        return setAngle(shuffleAngle.getDouble(0));
     }
 
     public Command stopMotors() {
         return runOnce(() -> shooterPivot.set(0));
     }
 
-    double tolerance = Units.degreesToRotations(2.0);
+    double tolerance = Units.degreesToRotations(3.0);
     public boolean atSetpoint() {
-        return Math.abs(shooterPivot.getClosedLoopError().getValue()) < tolerance;
+        return Math.abs(shooterPivot.getClosedLoopError().getValueAsDouble()) < tolerance;
     }
 
     // public Command printEncoder(Pose2d currentPose, Pose3d goalPose) {

@@ -49,56 +49,38 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "amp 2"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "feedNote"
+                  "pathName": "amp 2t"
                 }
               },
               {
-                "type": "wait",
+                "type": "named",
                 "data": {
-                  "waitTime": 3.0
+                  "name": "trollOuttake"
                 }
               }
             ]
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "amp3"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "shooterAim"
+                  "pathName": "amp 3t"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "shootNote"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 4.0
+                  "name": "trollOuttake"
                 }
               }
             ]

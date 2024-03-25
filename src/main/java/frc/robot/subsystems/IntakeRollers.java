@@ -5,10 +5,13 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.revrobotics.CANSparkMax;
 
 import static frc.robot.Constants.IntakeConstants.*;
+
+import java.util.function.BooleanSupplier;
 
 
 public class IntakeRollers extends SubsystemBase {
@@ -16,28 +19,42 @@ public class IntakeRollers extends SubsystemBase {
         intakeRollersID,
         MotorType.kBrushless
     );
-    final DigitalInput limSwitch = new DigitalInput(limSwitchDIO);
+    DigitalInput limSwitch = new DigitalInput(limSwitchDIO);
+    DigitalInput limSwitch2 =  new DigitalInput(limSwitchDIO2);
 
     public IntakeRollers() {
         intakeRollers.setIdleMode(IdleMode.kBrake);
-        intakeRollers.setOpenLoopRampRate(0.35);
+        intakeRollers.setOpenLoopRampRate(0.00);
     }
 
     public Command intakeNote() {
-        return run(() -> intakeRollers.setVoltage(-10))
-            .until(() -> limSwitch.get() || intakeRollers.getOutputCurrent() > 72.0)
-            .andThen(intakeStop());
+        return run(() -> intakeRollers.setVoltage(-6.5))
+            .until(() -> (limSwitch.get() || limSwitch2.get()))
+            .andThen(Commands.waitSeconds(0.025).andThen(() -> intakeRollers.setVoltage(0)));
+    }
+
+    public BooleanSupplier limBooleanSupplier() {
+        return () -> (!limSwitch.get() || !limSwitch2.get());
+    }
+
+    public Command intakeNoteAmp() {
+        return run(() -> intakeRollers.setVoltage(-8));
     }
 
     public Command outtakeNote() {
-        return run(() -> intakeRollers.setVoltage(12))
-            .withTimeout(.5)
-            .andThen(intakeStop());
+
+        return run(() -> {intakeRollers.set(1);})
+            .withTimeout(.80)
+            .andThen(this.intakeStop());
+    }
+
+    public Command outtakeConstant() {
+        return run(() -> intakeRollers.setVoltage(12));
     }
 
     public Command slowOuttakeNote() {
-        return run(() -> intakeRollers.setVoltage(4.75))
-            .withTimeout(1)
+        return run(() -> intakeRollers.setVoltage(2.35))
+            .withTimeout(.5)
             .andThen(intakeStop());
     }
 
@@ -46,6 +63,6 @@ public class IntakeRollers extends SubsystemBase {
     }
 
     public Command printLim() {
-        return runOnce(() -> System.out.println("" + limSwitch.get()));
+        return runOnce(() -> System.out.println("" + limSwitch.get() + " | " + limSwitch2.get()));
     }
 }

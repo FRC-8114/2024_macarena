@@ -4,19 +4,25 @@ import static frc.robot.Constants.ShooterFlywheelConstants.*;
 
 import java.util.Map;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class ShooterFlywheel implements Subsystem {
     private final TalonFX shooterFlywheelLeft = new TalonFX(shooterFlywheelLeftID, "canivore");
@@ -57,12 +63,21 @@ public class ShooterFlywheel implements Subsystem {
             System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 + " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
             shooterFlywheelLeft.setControl(fastMMConfig.withVelocity(speedRPM/60));
             shooterFlywheelRight.setControl(fastMMConfig.withVelocity(speedRPM/60));
-        });
+        }).until(() -> {
+            if (shooterFlywheelLeft.getVelocity().getValueAsDouble() * 60 > (5700)) {
+                upToSpeed = true;
+            }
+            if (upToSpeed && (shooterFlywheelLeft.getVelocity().getValueAsDouble() * 60) < 5500) {
+                upToSpeed = false;
+                return true;
+            }
+            return false;
+        }).andThen(stopFlywheels());
     }
 
     public Command slowFlywheels(double speedRPM) {
         return run(() -> {
-            System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 + " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
+            // System.out.println(shooterFlywheelLeft.getVelocity().getValueAsDouble()*60 + " | " + shooterFlywheelRight.getVelocity().getValueAsDouble()*60);
             shooterFlywheelLeft.setControl(slowMMConfig.withVelocity(speedRPM/60));
             shooterFlywheelRight.setControl(slowMMConfig.withVelocity(speedRPM/60)); }
         );
@@ -72,10 +87,10 @@ public class ShooterFlywheel implements Subsystem {
     public Command setSpeedWithStop(double speedRPM) {
         upToSpeed = false;
         return setSpeed(speedRPM).until(() -> {
-            if (shooterFlywheelLeft.getVelocity().getValueAsDouble() * 60 > (6050)) {
+            if (shooterFlywheelLeft.getVelocity().getValueAsDouble() * 60 > (5550)) {
                 upToSpeed = true;
             }
-            if (upToSpeed && (shooterFlywheelLeft.getVelocity().getValueAsDouble() * 60) < 5750) {
+            if (upToSpeed && (shooterFlywheelLeft.getVelocity().getValueAsDouble() * 60) < 5300) {
                 upToSpeed = false;
                 return true;
             }
@@ -83,7 +98,7 @@ public class ShooterFlywheel implements Subsystem {
         }).andThen(stopFlywheels());
     }
     public Command startFlywheels() {
-        return setSpeedWithStop(6350);
+        return setSpeed(6000);
     }
 
     private final GenericEntry shuffleFlywheelRPM = Shuffleboard.getTab("FieldInfo")
@@ -108,20 +123,20 @@ public class ShooterFlywheel implements Subsystem {
     }
 
 
-    // SysID Routine
-    // SysIdRoutine routine = new SysIdRoutine(
-    //     new SysIdRoutine.Config(null, Volts.of(4), null, (state) -> SignalLogger.writeString("state", state.toString())),
-    //     new SysIdRoutine.Mechanism(
-    //         (Measure<Voltage> volts) -> shooterFlywheelLeft.setControl(new VoltageOut(volts.in(Volts))), // Set voltage method
-    //         null, // Log function
-    //         this
-    //     )
-    // );
+    // SysId Routine
+    SysIdRoutine routine = new SysIdRoutine(
+        new SysIdRoutine.Config(null, Units.Volts.of(4), null, (state) -> SignalLogger.writeString("state", state.toString())),
+        new SysIdRoutine.Mechanism(
+            (Measure<Voltage> volts) -> shooterFlywheelLeft.setControl(new VoltageOut(volts.in(Units.Volts))), // Set voltage method
+            null, // Log function
+            this
+        )
+    );
 
-    // public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-    //     return routine.quasistatic(direction);
-    // }
-    // public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-    //     return routine.dynamic(direction);
-    // }
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return routine.quasistatic(direction);
+    }
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return routine.dynamic(direction);
+    }
 }

@@ -3,50 +3,50 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.3140196323188638,
-        "y": 5.558761252051653
+        "x": 7.874516914953112,
+        "y": 7.588622081666418
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.3140196323188604,
-        "y": 5.558761252051653
+        "x": 7.874516914953112,
+        "y": 7.528622081666418
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "amt 2t"
     },
     {
       "anchor": {
-        "x": 2.5553683061717036,
-        "y": 5.558761252051653
+        "x": 7.874516914953112,
+        "y": 0.772915212021579
       },
       "prevControl": {
-        "x": 1.6902630782034,
-        "y": 5.558761252051653
+        "x": 7.874516914953112,
+        "y": 0.8329152120215784
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "centerAuto 1"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.25,
-    "maxAcceleration": 1.25,
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0,
+    "rotation": -45.00000000000005,
     "rotateFast": false
   },
   "reversed": false,
   "folder": null,
   "previewStartingState": {
-    "rotation": 0,
+    "rotation": -38.38740206913528,
     "velocity": 0
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }

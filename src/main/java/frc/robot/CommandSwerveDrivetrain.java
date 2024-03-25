@@ -4,12 +4,15 @@ import java.util.function.Supplier;
 
 import org.photonvision.PhotonUtils;
 
+import static edu.wpi.first.units.Units.Volts;
+
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -25,6 +28,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants;
 
 /**
@@ -51,6 +55,61 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         if (Utils.isSimulation()) {
             startSimThread();
         }
+    }
+
+    private final SwerveRequest.SysIdSwerveTranslation TranslationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
+    private SysIdRoutine sysIdRoutineTranslation = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,
+            Volts.of(4),
+            null,
+            (state) -> SignalLogger.writeString("state", state.toString())
+        ), 
+        new SysIdRoutine.Mechanism(
+            (volts) -> setControl(TranslationCharacterization.withVolts(volts)),
+            null, 
+            this
+        )
+    );
+
+    private final SwerveRequest.SysIdSwerveRotation RotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+    private SysIdRoutine sysIdRoutineRotation = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,
+            Volts.of(4),
+            null,
+            (state) -> SignalLogger.writeString("state", state.toString())
+        ), 
+        new SysIdRoutine.Mechanism(
+            (volts) -> setControl(RotationCharacterization.withVolts(volts)),
+            null, 
+            this
+        )
+    );
+
+    private final SwerveRequest.SysIdSwerveSteerGains SteerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
+    private SysIdRoutine sysIdRoutineSteer = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,
+            Volts.of(7),
+            null,
+            (state) -> SignalLogger.writeString("state", state.toString())
+        ), 
+        new SysIdRoutine.Mechanism(
+            (volts) -> setControl(SteerCharacterization.withVolts(volts)),
+            null, 
+            this
+        )
+    );
+
+    // CHANGE THIS
+    private final SysIdRoutine RoutineToApply = sysIdRoutineTranslation;
+    
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return RoutineToApply.quasistatic(direction);
+    }
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return RoutineToApply.dynamic(direction);
     }
 
     private void configurePathPlanner() {
@@ -121,6 +180,4 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         });
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
-
-
 }

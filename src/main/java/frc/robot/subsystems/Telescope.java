@@ -17,6 +17,8 @@ public class Telescope implements Subsystem {
         telescopeRight.setIdleMode(IdleMode.kBrake);
         telescopeLeft.setIdleMode(IdleMode.kBrake);
 
+        // telescopeRight.setInverted(true);
+
         telescopeRight.follow(telescopeLeft);
     }
 

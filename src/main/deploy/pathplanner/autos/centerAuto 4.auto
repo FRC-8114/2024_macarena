@@ -2,7 +2,7 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.4414471878271118,
+      "x": 1.3140196323188638,
       "y": 5.558761252051653
     },
     "rotation": 0
@@ -18,7 +18,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "shooterAim"
+                  "name": "startAim"
                 }
               },
               {
@@ -91,12 +91,6 @@
           "type": "race",
           "data": {
             "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "shooterLoadPosition"
-                }
-              },
               {
                 "type": "named",
                 "data": {
@@ -189,6 +183,50 @@
           }
         },
         {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "feedNote"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "shooterAim"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "shootNote"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.0
+                }
+              }
+            ]
+          }
+        },
+        {
           "type": "parallel",
           "data": {
             "commands": [
@@ -243,12 +281,6 @@
           "type": "race",
           "data": {
             "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "shooterLoadPosition"
-                }
-              },
               {
                 "type": "named",
                 "data": {

@@ -2,8 +2,6 @@ package frc.robot.subsystems;
 
 import static frc.robot.Constants.IntakeConstants.*;
 
-import java.util.function.BooleanSupplier;
-
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
@@ -26,9 +24,10 @@ public class IntakePivot extends SubsystemBase {
 
     public IntakePivot() {
         intakePivot.setIdleMode(IdleMode.kBrake);
+        intakePivot.setInverted(true);
         intakePivotEncoder.setPosition(0);
-        intakePivotEncoder.setPositionConversionFactor(1.0/30.0);
-        controller.setTolerance(Units.degreesToRotations(2.0));
+        intakePivotEncoder.setPositionConversionFactor(1.0/36.0);
+        controller.setTolerance(Units.degreesToRotations(2));
     }
 
     public double getAngle() {
@@ -39,12 +38,13 @@ public class IntakePivot extends SubsystemBase {
         return run(() -> {
             double curPose = Units.rotationsToRadians(intakePivotEncoder.getPosition());
             double ff = feedforward.calculate(curPose, controller.getSetpoint().velocity);
-            intakePivot.setVoltage(controller.calculate(intakePivotEncoder.getPosition(), goal) + ff);
+            // System.out.println("" + controller.calculate(intakePivotEncoder.getPosition(), goal) + " | " + ff + " | " + intakePivotEncoder.getPosition());
+            intakePivot.setVoltage((controller.calculate(intakePivotEncoder.getPosition(), goal) + ff));
         });
     }
 
-    public BooleanSupplier atSetpoint() {
-        return () -> controller.atSetpoint() || intakePivot.getOutputCurrent() > 70;
+    public boolean atSetpoint() {
+        return (controller.atSetpoint());
     }
 
     public Command intakeSetVoltage(double voltage) {
@@ -52,25 +52,29 @@ public class IntakePivot extends SubsystemBase {
     }
 
     public Command intakeDown() {
-        return setAngle(0.39365264773368835)
-            .until(atSetpoint())
+        return setAngle(0.50065264773368835)
+            .until(() -> intakePivotEncoder.getPosition() > 0.375)
             .andThen(stopMotor());
     }
 
     public Command intakeAmp() {
-        return setAngle(0.17)
-            .until(atSetpoint())
+        return setAngle(0.27)
+            .until(() -> intakePivotEncoder.getPosition() > 0.255)
             .andThen(stopMotor());
     }
 
     public Command intakeUp() {
         return setAngle(0)
-            .until(atSetpoint())
+            .until(() -> intakePivotEncoder.getPosition() < 0.01)
             .andThen(stopMotor());
     }
 
     public Command resetAngle() {
         return runOnce(() -> intakePivotEncoder.setPosition(0.0));
+    }
+
+    public void vResetAngle() {
+        intakePivotEncoder.setPosition(0.0);
     }
 
     public Command stopMotor() {

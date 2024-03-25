@@ -9,10 +9,13 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -31,7 +34,7 @@ public class Robot extends TimedRobot {
     AprilTagFields.k2024Crescendo.loadAprilTagLayoutField(),
     new Transform3d(new Translation3d(-0.3429, 0, 0.216),
     new Rotation3d(0, -0.436, 3.1415)));
-  boolean usingTags = true;
+  public static boolean usingTags = true;
 
   @Override
   public void robotInit() {
@@ -52,8 +55,8 @@ public class Robot extends TimedRobot {
     if (usingTags && pipeline.isPresent()) {
       Pose2d curPos = pipeline.get().estimatedPose.toPose2d();
       if ((pipeline.get().strategy == PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR)
-          || pipeline.get().targetsUsed.get(0).getPoseAmbiguity() > 0.2) {
-        m_robotContainer.drivetrain.addVisionMeasurement(curPos, pipeline.get().timestampSeconds);
+          || pipeline.get().targetsUsed.get(0).getPoseAmbiguity() > 0.3) {
+        m_robotContainer.drivetrain.addVisionMeasurement(curPos, pipeline.get().timestampSeconds, april.getSTDDEVS(pipeline));
       }
     }
     
@@ -96,6 +99,7 @@ public class Robot extends TimedRobot {
       m_autonomousCommand.cancel();
     }
     usingTags = true;
+    m_robotContainer.resetIntake();
     m_robotContainer.configureBindings();
     SignalLogger.stop();
     // m_robotContainer.drivetrain.seedFieldRelative(new Pose2d(14.72234058380127, 7.769551753997803, new Rotation2d(1.5707963267948966)));

@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.9158511897622923,
-      "y": 6.604911811820771
+      "x": 0.7753211512129142,
+      "y": 6.616622648366552
     },
-    "rotation": 66.03751102542182
+    "rotation": 59.300277449185614
   },
   "command": {
     "type": "sequential",
@@ -18,13 +18,19 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "shooterAim"
+                  "name": "startAim"
                 }
               },
               {
                 "type": "named",
                 "data": {
                   "name": "shootNote"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.0
                 }
               }
             ]
@@ -43,12 +49,6 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "shooterLoadPosition"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
                   "name": "feedNote"
                 }
               }
@@ -69,6 +69,12 @@
                 "type": "named",
                 "data": {
                   "name": "shootNote"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.0
                 }
               }
             ]
@@ -87,12 +93,6 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "shooterLoadPosition"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
                   "name": "feedNote"
                 }
               }
@@ -113,6 +113,12 @@
                 "type": "named",
                 "data": {
                   "name": "shootNote"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.0
                 }
               }
             ]
