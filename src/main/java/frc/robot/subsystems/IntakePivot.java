@@ -52,8 +52,10 @@ public class IntakePivot extends SubsystemBase {
     }
 
     public Command intakeDown() {
+        if (intakePivotEncoder.getPosition() > 0.44)
+            return stopMotor();
         return setAngle(0.50065264773368835)
-            .until(() -> intakePivotEncoder.getPosition() > 0.375)
+            .until(() -> intakePivotEncoder.getPosition() > 0.325)
             .andThen(stopMotor());
     }
 

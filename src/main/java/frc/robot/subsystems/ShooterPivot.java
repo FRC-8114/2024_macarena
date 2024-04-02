@@ -77,13 +77,15 @@ public class ShooterPivot extends SubsystemBase {
         angleMap.put(Units.inchesToMeters(16+38.5), 59.59);
         angleMap.put(Units.inchesToMeters(16+12+38.5), 54.97);
         angleMap.put(Units.inchesToMeters(16+24+38.5), 48.19);
-        angleMap.put(Units.inchesToMeters(16+36+38.5), 47.97);
-        angleMap.put(Units.inchesToMeters(16+48+38.5), 45.68);
-        angleMap.put(Units.inchesToMeters(16+60+38.5), 44.20);
-        angleMap.put(Units.inchesToMeters(16+72+38.5), 41.50);
-        angleMap.put(Units.inchesToMeters(16+84+38.5), 41.275);
-        angleMap.put(Units.inchesToMeters(16+96+38.5), 40.40);
-        angleMap.put(Units.inchesToMeters(16+108+38.5), 38.89);
+        angleMap.put(Units.inchesToMeters(16+36+38.5), 47.67);
+        angleMap.put(Units.inchesToMeters(16+48+38.5), 45.48);
+        angleMap.put(Units.inchesToMeters(16+60+38.5), 44.00);
+        angleMap.put(Units.inchesToMeters(16+72+38.5), 41.20);
+        angleMap.put(Units.inchesToMeters(16+84+38.5), 40.075);
+        angleMap.put(Units.inchesToMeters(16+96+38.5), 39.00);
+        angleMap.put(Units.inchesToMeters(16+108+38.5), 37.99);
+        angleMap.put(Units.inchesToMeters(16+120+38.5), 37.20);
+        angleMap.put(Units.inchesToMeters(16+132+38.5), 36.50);
     }
     
     public ShooterPivot() {
@@ -128,20 +130,8 @@ public class ShooterPivot extends SubsystemBase {
     //     });
     // }
     final AprilTagFieldLayout field = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
-    Pose2d pose2d;
+    Pose2d pose2d = field.getTagPose(4).get().toPose2d();
     public Command setAngleFromPose() {
-        var dsAlliance = DriverStation.getAlliance();
-        pose2d = field.getTagPose(7).get().toPose2d();
-    // Drive Controls (Flip depending on alliance)
-        if (dsAlliance.isPresent()) {
-            if (dsAlliance.get() == DriverStation.Alliance.Blue) {
-                pose2d = field.getTagPose(7).get().toPose2d();
-            }
-            else if (dsAlliance.get() == DriverStation.Alliance.Red) {
-                pose2d = field.getTagPose(4).get().toPose2d();
-            }
-        }
-
         return run(() -> {
             // System.out.println("" + getShotAngle(goalPose) + " | " + PhotonUtils.getDistanceToPose(RobotContainer.drivetrain.getState().Pose, goalPose.toPose2d()));
             double position = Units.degreesToRotations(angleMap.get(Math.abs(PhotonUtils.getDistanceToPose(RobotContainer.drivetrain.getState().Pose, pose2d))));
@@ -160,8 +150,14 @@ public class ShooterPivot extends SubsystemBase {
         .getEntry();
 
     public Command setAngleFromShuffle() {
-        Shuffleboard.update();
-        return setAngle(shuffleAngle.getDouble(0));
+        return run(() -> {
+            Shuffleboard.update();
+            // TrapezoidProfile.State calc = profile.calculate(Timer.getFPGATimestamp()-start, curPoint, m_goal);
+            // System.out.println("Pos: " + Units.degreesToRotations(goalAngle) + " | CurPose: " + this.getAngle());
+            shooterPivot.setControl(
+                pos.withPosition(Units.degreesToRotations(shuffleAngle.getDouble(0)))
+            );
+        });
     }
 
     public Command stopMotors() {
@@ -171,6 +167,20 @@ public class ShooterPivot extends SubsystemBase {
     double tolerance = Units.degreesToRotations(3.0);
     public boolean atSetpoint() {
         return Math.abs(shooterPivot.getClosedLoopError().getValueAsDouble()) < tolerance;
+    }
+
+    @Override
+    public void periodic() {
+        var dsAlliance = DriverStation.getAlliance();
+    // Drive Controls (Flip depending on alliance)
+        if (dsAlliance.isPresent()) {
+            if (dsAlliance.get().equals(DriverStation.Alliance.Blue)) {
+                pose2d = field.getTagPose(7).get().toPose2d();
+            }
+            else if (dsAlliance.get().equals(DriverStation.Alliance.Red)) {
+                pose2d = field.getTagPose(4).get().toPose2d();
+            }
+        }
     }
 
     // public Command printEncoder(Pose2d currentPose, Pose3d goalPose) {

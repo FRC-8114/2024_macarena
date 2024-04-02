@@ -97,8 +97,9 @@ public class RobotContainer {
 
     // == Xbox Controller ==
     joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-    joystick.b().whileTrue(drivetrain
-        .applyRequest(() -> point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
+    joystick.b().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
+    joystick.x().whileTrue(shotSequence());
+    joystick.y().whileTrue(shooterPivot.setAngleFromPose());
 
     // joystick.povDown().onTrue(moveToPose(new Pose2d(15.201, 5.574, new Rotation2d(0))));
 
@@ -112,20 +113,15 @@ public class RobotContainer {
     shooterPivot.setDefaultCommand(shooterPivot.setAngle(61));
 
     // Telescope Controls
-    joystick.rightBumper().onTrue(telescope.setSpeedCommand(7)).onFalse(telescope.setSpeedCommand(0));
-    joystick.leftBumper().onTrue(telescope.setSpeedCommand(-5)).onFalse(telescope.setSpeedCommand(0));
+    joystick.rightBumper().onTrue(Commands.parallel(intakeRollers.intakeStop(), intakePivot.intakeUp()));
+    joystick.leftBumper().onTrue(Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote()));
 
-    joystick.leftTrigger().onTrue(intakePivot.intakeUp()).whileTrue(shooterPivot.setAngle(37));
-    joystick.povDown().onTrue(Commands.parallel(intakePivot.intakeDown(), intakeRollers.intakeNote())).whileTrue(shooterPivot.setAngle(37));
+    joystick.leftTrigger().whileTrue(shooterPivot.setAngleFromPose());
+    joystick.povUp().onTrue(telescope.setSpeedCommand(7)).onFalse(telescope.setSpeedCommand(0));
     joystick.povRight().whileTrue(shooterPivot.setAngleFromPose());
-    joystick.rightTrigger().onTrue(this.shotSequence());
-    joystick.povUp().onTrue(Commands.runOnce(() -> {
-      if (turtleMode == 1) {
-        turtleMode = 0.25;
-      }
-      else 
-        turtleMode = 1.0;
-    }));
+    // joystick.povLeft().
+    joystick.rightTrigger().onTrue(shotSequence());
+    joystick.povDown().onTrue(telescope.setSpeedCommand(-5)).onFalse(telescope.setSpeedCommand(0));
 
     // == Launchpad ==
     button[0][0].whileTrue(drivetrain.applyRequest(() -> brake)); // Motor Brake
@@ -138,7 +134,7 @@ public class RobotContainer {
     button[3][3].onTrue(intakePivot.intakeAmp());
     button[5][2].onTrue(intakePivot.intakeSetVoltage(-4)).onFalse(intakePivot.stopMotor());
     button[6][2].onTrue(intakePivot.intakeSetVoltage(4)).onFalse(intakePivot.stopMotor());
-    button[7][2].onTrue(intakeRollers.printLim());
+    button[7][2].onTrue(intakePivot.printEncoder());
     button[7][3].onTrue(intakeRollers.intakeNoteAmp());
     // button[0][5].onTrue(shooterPivot.setAngleFromShuffle()); // Shuffle Angler
     button[3][0].onTrue(intakePivot.resetAngle());
@@ -147,16 +143,16 @@ public class RobotContainer {
     button[4][3].whileTrue(shooterPivot.setAngle(61));
 
     // AutoAim
-    button[4][1].onTrue(shooterFlywheel.slowFlywheels(425)).onFalse(shooterFlywheel.stopFlywheels());
+    button[4][1].onTrue(shooterFlywheel.slowFlywheels(450)).onFalse(shooterFlywheel.stopFlywheels());
     button[2][3].whileTrue(shooterPivot.setAngleFromPose());
     button[0][3].whileTrue(shooterPivot.setAngle(45));
     button[0][4].whileTrue(shooterPivot.setAngleFromShuffle());
 
-    // button[7][4].onTrue(shooterFlywheel.sysIdQuasistatic(Direction.kForward));
-    // button[7][5].onTrue(shooterFlywheel.sysIdQuasistatic(Direction.kReverse));
+    button[7][4].onTrue(shooterFlywheel.sysIdQuasistatic(Direction.kForward));
+    button[7][5].onTrue(shooterFlywheel.sysIdQuasistatic(Direction.kReverse));
 
-    // button[7][6].onTrue(shooterFlywheel.sysIdDynamic(Direction.kForward));
-    // button[7][7].onTrue(shooterFlywheel.sysIdDynamic(Direction.kReverse));
+    button[7][6].onTrue(shooterFlywheel.sysIdDynamic(Direction.kForward));
+    button[7][7].onTrue(shooterFlywheel.sysIdDynamic(Direction.kReverse));
     
     // SysID
     // joystick.povUp().and(joystick.a()).onTrue(shooterFlywheel.sysIdQuasistatic(Direction.kForward));
@@ -226,7 +222,7 @@ public class RobotContainer {
   }
 
   public Command shotSequence() {
-    return Commands.deadline(Commands.waitSeconds(1.5).andThen(intakeRollers.outtakeNote()), (shooterFlywheel.startFlywheels().withTimeout(3).andThen(shooterFlywheel.stopFlywheels())));
+    return Commands.deadline(Commands.waitSeconds(1.4).andThen(intakeRollers.outtakeNote()), (shooterFlywheel.startFlywheels())).andThen(shooterFlywheel.stopFlywheels());
   }
 
   public Command shooterStop() {

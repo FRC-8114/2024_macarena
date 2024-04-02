@@ -98,7 +98,7 @@ public class ShooterFlywheel implements Subsystem {
         }).andThen(stopFlywheels());
     }
     public Command startFlywheels() {
-        return setSpeed(6000);
+        return setSpeed(6300);
     }
 
     private final GenericEntry shuffleFlywheelRPM = Shuffleboard.getTab("FieldInfo")

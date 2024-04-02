@@ -29,8 +29,8 @@ public class IntakeRollers extends SubsystemBase {
 
     public Command intakeNote() {
         return run(() -> intakeRollers.setVoltage(-6.5))
-            .until(() -> (limSwitch.get() || limSwitch2.get()))
-            .andThen(Commands.waitSeconds(0.025).andThen(() -> intakeRollers.setVoltage(0)));
+            .until(() -> (limSwitch.get() && limSwitch2.get()))
+            .andThen(() -> intakeRollers.setVoltage(0));
     }
 
     public BooleanSupplier limBooleanSupplier() {

@@ -42,8 +42,11 @@ public class Robot extends TimedRobot {
     Shuffleboard.update();
     Shuffleboard.getTab("FieldInfo").add("Field2d", field).withWidget("Field");
 
-    SignalLogger.stop();
-    SignalLogger.enableAutoLogging(false);
+    // SignalLogger.stop();
+    // SignalLogger.enableAutoLogging(false);
+
+    SignalLogger.start();
+
     // DataLogManager.start();
     // URCL.start();
   }
@@ -101,7 +104,7 @@ public class Robot extends TimedRobot {
     usingTags = true;
     m_robotContainer.resetIntake();
     m_robotContainer.configureBindings();
-    SignalLogger.stop();
+    // SignalLogger.stop();
     // m_robotContainer.drivetrain.seedFieldRelative(new Pose2d(14.72234058380127, 7.769551753997803, new Rotation2d(1.5707963267948966)));
   }
 

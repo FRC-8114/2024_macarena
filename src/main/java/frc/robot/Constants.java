@@ -14,28 +14,28 @@ public class Constants {
 
         public static double kP = 14;
         public static double kI = 0.0;
-        public static double kD = 0.3;
+        public static double kD = 0.4;
     
-        public static double kS = 0.70;
-        public static double kG = 0.5;
+        public static double kS = 0.90;
+        public static double kG = 0.3;
         public static double kV = 0.200;
         public static double kDt = 0.02;
     
-        public static double kMaxVelocity = 5;
-        public static double kMaxAcceleration = 6;
+        public static double kMaxVelocity = 4.9;
+        public static double kMaxAcceleration = 5;
     };
 
     public static final class ShooterPivotConstants {
         public static final int shooterPivotID = 60;
         public static final int shooterEncoder = 4;
 
-        public static double kP = 115.0;
-        public static double kI = 2;
-        public static double kD = 0.00;
+        public static double kP = 125.0;
+        public static double kI = 10.0;
+        public static double kD = 0.0;
 
-        public static double kS = 2.8;
+        public static double kS = 3.0;
         public static double kV = 4.0;
-        public static double kG = 0.1;
+        public static double kG = 0.12;
         public static double kDt = 0.02;
 
         public static double kMaxVelocity = 1;
@@ -55,15 +55,15 @@ public class Constants {
 
         public static final class Fast {
             public static final double shooterRPM = 4000;
-            public static final double shooterAcceleration = 90;
+            public static final double shooterAcceleration = 100;
            
-            public static double kP = 2.05299;
+            public static double kP = 4.0;
             public static double kI = 0.0;
             public static double kD = 0.00;
     
-            public static double kS = 0.14449;
-            public static double kV = 0.12049;
-            public static double kA = 0.0145277;
+            public static double kS = 0.067504;
+            public static double kV = 0.12574;
+            public static double kA = 0.020513;
         }
         
         public static final class Slow {
